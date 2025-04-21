@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainwater Harvesting Calculator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=drawing,geometry"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        primaryDark: '#4A49B0',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .dark .chart-container canvas {
+            filter: invert(0.9) hue-rotate(180deg);
+        }
+        #map-container {
+            height: 400px;
+            width: 100%;
+        }
+        .area-list-item {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .area-list-item:hover {
+            background-color: rgba(93, 92, 222, 0.1);
+        }
+        .area-list-item.selected {
+            background-color: rgba(93, 92, 222, 0.2);
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: #5D5CDE;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .dark .spinner {
+            border-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #5D5CDE;
+        }
+        /* Search box styling */
+        .map-search-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            width: calc(100% - 20px);
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-primary dark:bg-primary text-white py-4 px-4 shadow-md">
+            <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+                <h1 class="text-2xl font-bold mb-2 md:mb-0">Rainwater Harvesting Calculator</h1>
+                <p class="text-sm md:text-base italic">Calculate your rainwater collection potential</p>
+            </div>
+        </header>
+
+        <main class="container mx-auto p-4 flex-grow">
+            <!-- Map Area Measurement Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Measure Collection Areas</h2>
+                
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2">
+                        <div id="map-container" class="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 relative">
+                            <!-- Search box will be positioned here -->
+                            <div class="map-search-container">
+                                <div class="flex w-full">
+                                    <input id="map-search-input" type="text" placeholder="Search for an address or location" 
+                                        class="flex-grow p-2 border rounded-l-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white shadow-sm">
+                                    <button id="map-search-button" class="p-2 bg-primary hover:bg-primaryDark text-white rounded-r-md flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <button id="draw-polygon" class="px-3 py-2 bg-primary hover:bg-primaryDark text-white text-sm font-medium rounded transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                                </svg>
+                                Draw Area
+                            </button>
+                            <button id="clear-drawing" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Clear Drawing
+                            </button>
+                            <button id="toggle-search" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded transition ml-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                Toggle Search
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-medium mb-3">Saved Areas</h3>
+                        
+                        <div id="no-areas" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            </svg>
+                            <p>Draw areas on the map to measure your roof, driveway, or other surfaces.</p>
+                        </div>
+                        
+                        <div id="area-save-form" class="hidden mb-4">
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium mb-1">Area Size</label>
+                                <div class="text-xl font-bold" id="measured-area">0 sq ft</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="area-name" class="block text-sm font-medium mb-1">Name this area</label>
+                                <input type="text" id="area-name" placeholder="e.g., Main Roof, Driveway" 
+                                    class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
+                            </div>
+                            <button id="save-area" class="w-full py-2 px-3 bg-primary hover:bg-primaryDark text-white font-medium rounded-md transition">
+                                Save Area
+                            </button>
+                        </div>
+                        
+                        <ul id="saved-areas-list" class="divide-y divide-gray-200 dark:divide-gray-600 max-h-64 overflow-y-auto">
+                            <!-- Saved areas will be displayed here -->
+                        </ul>
+                        
+                        <div id="total-area" class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600 hidden">
+                            <div class="flex justify-between">
+                                <span class="font-medium">Total Area:</span>
+                                <span id="total-area-value" class="font-bold">0 sq ft</span>
+                            </div>
+                            <button id="use-in-calculator" class="w-full mt-3 py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition">
+                                Use in Calculator
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Input Form Section -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Enter Your Information</h2>
+                    
+                    <form id="calculator-form" class="space-y-5">
+                        <!-- Rainfall Data Section -->
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+                            <h3 class="text-lg font-medium mb-3">Rainfall Data</h3>
+                            
+                            <!-- Tab Navigation -->
+                            <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+                                <button type="button" id="tab-zipcode" class="tab-btn px-4 py-2 border-b-2 border-primary text-primary font-medium">Zip Code</button>
+                                <button type="button" id="tab-city" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-primary">City</button>
+                                <button type="button" id="tab-custom" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-primary">Custom Data</button>
+                            </div>
+                            
+                            <!-- Zip Code Tab -->
+                            <div id="zipcode-tab" class="tab-content">
+                                <div class="mb-3">
+                                    <label for="zipcode" class="block text-sm font-medium mb-1">Enter Zip Code</label>
+                                    <div class="flex">
+                                        <input type="text" id="zipcode" placeholder="e.g., 92101" 
+                                            class="flex-grow p-3 border rounded-l-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
+                                        <button type="button" id="search-zipcode" class="bg-primary hover:bg-primaryDark text-white px-4 rounded-r-md">
+                                            <span>Search</span>
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Get rainfall data for your specific location.
+                                    </p>
+                                </div>
+                                
+                                <div id="zipcode-result" class="hidden">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="font-medium" id="zipcode-location">Rainfall Data for: <span id="zipcode-display"></span></h4>
+                                        <span class="text-xs text-gray-500">Data source: <span id="data-source">Database</span></span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <div class="flex justify-between text-sm">
+                                            <span>Annual Average Rainfall:</span>
+                                            <span id="zipcode-annual" class="font-bold"></span>
+                                        </div>
+                                        <div id="zipcode-loading" class="py-4 flex justify-center">
+                                            <div class="spinner"></div>
+                                        </div>
+                                        <div id="zipcode-data" class="hidden">
+                                            <div class="mt-3 text-sm grid grid-cols-3 gap-2">
+                                                <!-- Zip code monthly data will be populated here -->
+                                            </div>
+                                        </div>
+                                        <div id="zipcode-error" class="hidden mt-3 text-sm p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded">
+                                            Error fetching rainfall data. Please try again or enter a different location.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- City Tab -->
+                            <div id="city-tab" class="tab-content hidden">
+                                <div>
+                                    <label for="location" class="block text-sm font-medium mb-1">Select Your Location</label>
+                                    <select id="location" name="location"
+                                        class="w-full p-3 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
+                                        <option value="" disabled selected>Choose a city</option>
+                                        <!-- Locations will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom Data Tab -->
+                            <div id="custom-tab" class="tab-content hidden">
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <label class="block text-sm font-medium">Enter Monthly Rainfall Amounts (inches)</label>
+                                        <button type="button" id="reset-custom" class="text-xs text-primary">Reset Data</button>
+                                    </div>
+                                    <div class="grid grid-cols-4 gap-2" id="custom-data-inputs">
+                                        <!-- Month inputs will be populated by JavaScript -->
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Enter your own rainfall data if you have more accurate local measurements.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="area" class="block text-sm font-medium mb-1">Collection Surface Area (square feet)</label>
+                            <input type="number" id="area" name="area" required min="10" placeholder="e.g., 1200" 
+                                class="w-full p-3 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Enter the square footage of your roof or other collection surface.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="efficiency" class="block text-sm font-medium mb-1">System Efficiency (%)</label>
+                            <input type="number" id="efficiency" name="efficiency" value="85" min="1" max="100" 
+                                class="w-full p-3 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Typical rainwater systems capture 80-90% of rainfall due to losses from evaporation, splash, etc.
+                            </p>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 px-4 bg-primary hover:bg-primaryDark text-white font-medium rounded-md transition duration-150 ease-in-out">
+                            Calculate Potential
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Results Section -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Rainwater Harvesting Potential</h2>
+                    
+                    <div id="results-container" class="hidden">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-medium">Location: <span id="result-location" class="font-normal"></span></h3>
+                            <p class="mt-1">Collection Area: <span id="result-area"></span> sq ft</p>
+                            <p class="mt-1">System Efficiency: <span id="result-efficiency"></span>%</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+                                <p class="text-sm text-blue-700 dark:text-blue-300">Annual Rainfall</p>
+                                <p class="text-2xl font-bold" id="result-annual-rainfall"></p>
+                            </div>
+                            <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+                                <p class="text-sm text-green-700 dark:text-green-300">Annual Collection</p>
+                                <p class="text-2xl font-bold" id="result-annual-collection"></p>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <canvas id="rainfall-chart"></canvas>
+                        </div>
+
+                        <div class="overflow-x-auto mt-6">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Month</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rainfall (in)</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Water Collected (gal)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="results-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <!-- Results will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="no-results" class="text-center py-10">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">No Calculations Yet</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fill out the form to see your rainwater harvesting potential.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bg-gray-100 dark:bg-gray-800 py-4 px-4 mt-8">
+            <div class="container mx-auto text-center text-sm text-gray-600 dark:text-gray-400">
+                <p>This calculator provides estimates based on historical rainfall data. Actual results may vary.</p>
+                <p class="mt-1">© 2023 Rainwater Harvesting Calculator</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Map variables
+        let map;
+        let drawingManager;
+        let selectedShape = null;
+        let currentPolygon = null;
+        let savedAreas = [];
+        let searchBox;
+        
+        // Initialize map 
+        function initMap() {
+            // Default location (United States)
+            const defaultLocation = { lat: 39.8283, lng: -98.5795 };
+            
+            // Create map with tilt disabled
+            map = new google.maps.Map(document.getElementById('map-container'), {
+                center: defaultLocation,
+                zoom: 5,
+                mapTypeId: 'hybrid', // Use hybrid by default (satellite + roads)
+                mapTypeControl: true,
+                streetViewControl: false,
+                fullscreenControl: true,
+                zoomControl: true,
+                tilt: 0, // Disable the 45-degree tilt
+                styles: document.documentElement.classList.contains('dark') ? [
+                    { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                    { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                    { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] }
+                ] : []
+            });
+            
+            // Create drawing manager
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: null,
+                drawingControl: false,
+                polygonOptions: {
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0.35,
+                    editable: true
+                }
+            });
+            
+            drawingManager.setMap(map);
+            
+            // Add event listener for when polygon is completed
+            google.maps.event.addListener(drawingManager, 'polygoncomplete', function(polygon) {
+                // Clear any existing polygons
+                if (currentPolygon) {
+                    currentPolygon.setMap(null);
+                }
+                
+                currentPolygon = polygon;
+                selectedShape = polygon;
+                drawingManager.setDrawingMode(null);
+                
+                // Calculate area
+                const area = google.maps.geometry.spherical.computeArea(polygon.getPath());
+                // Convert from square meters to square feet
+                const areaInSquareFeet = area * 10.7639;
+                
+                document.getElementById('measured-area').textContent = Math.round(areaInSquareFeet).toLocaleString() + ' sq ft';
+                document.getElementById('area-save-form').classList.remove('hidden');
+                document.getElementById('no-areas').classList.add('hidden');
+                
+                // Add listeners for when the polygon is modified
+                google.maps.event.addListener(polygon.getPath(), 'set_at', updateArea);
+                google.maps.event.addListener(polygon.getPath(), 'insert_at', updateArea);
+                
+                function updateArea() {
+                    const updatedArea = google.maps.geometry.spherical.computeArea(polygon.getPath());
+                    const updatedAreaInSquareFeet = updatedArea * 10.7639;
+                    document.getElementById('measured-area').textContent = Math.round(updatedAreaInSquareFeet).toLocaleString() + ' sq ft';
+                }
+            });
+            
+            // Set up search functionality with Google's Autocomplete
+            const searchInput = document.getElementById('map-search-input');
+            const searchButton = document.getElementById('map-search-button');
+            
+            // Create autocomplete
+            const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+                types: ['geocode']
+            });
+            
+            autocomplete.bindTo('bounds', map);
+            
+            // Add listener for place changes
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                
+                if (!place.geometry || !place.geometry.location) {
+                    // User entered a place that was not suggested and pressed Enter
+                    alert("No details available for: " + place.name);
+                    return;
+                }
+                
+                // If the place has a geometry, then present it on a map.
+                if (place.geometry.viewport) {
+                    map.fitBounds(place.geometry.viewport);
+                } else {
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(17);
+                }
+            });
+            
+            // Add search button click handler
+            searchButton.addEventListener('click', function() {
+                if (searchInput.value.trim() === '') return;
+                
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: searchInput.value }, function(results, status) {
+                    if (status === 'OK') {
+                        map.setCenter(results[0].geometry.location);
+                        map.setZoom(17);
+                    } else {
+                        alert('Location search was not successful for the following reason: ' + status);
+                    }
+                });
+            });
+            
+            // Try to get user's location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    map.setCenter(userLocation);
+                    map.setZoom(18); // Zoom in to a level where buildings are visible
+                }, function() {
+                    // Location access denied or error
+                    console.log('Unable to get current location.');
+                });
+            }
+        }
+        
+        // Handle map action buttons
+        document.getElementById('draw-polygon').addEventListener('click', function() {
+            clearCurrentDrawing();
+            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+        });
+        
+        document.getElementById('clear-drawing').addEventListener('click', clearCurrentDrawing);
+        
+        // Toggle search box
+        document.getElementById('toggle-search').addEventListener('click', function() {
+            const searchBox = document.querySelector('.map-search-container');
+            searchBox.classList.toggle('hidden');
+        });
+        
+        function clearCurrentDrawing() {
+            if (currentPolygon) {
+                currentPolygon.setMap(null);
+                currentPolygon = null;
+            }
+            document.getElementById('area-save-form').classList.add('hidden');
+            if (savedAreas.length === 0) {
+                document.getElementById('no-areas').classList.remove('hidden');
+            }
+            drawingManager.setDrawingMode(null);
+        }
+        
+        // Save area
+        document.getElementById('save-area').addEventListener('click', function() {
+            const areaName = document.getElementById('area-name').value.trim();
+            
+            if (!areaName) {
+                alert('Please enter a name for this area.');
+                return;
+            }
+            
+            if (!currentPolygon) {
+                alert('No area has been drawn on the map.');
+                return;
+            }
+            
+            const area = google.maps.geometry.spherical.computeArea(currentPolygon.getPath());
+            const areaInSquareFeet = area * 10.7639;
+            
+            // Save the polygon's path coordinates (needed to recreate the polygon later)
+            const pathArray = [];
+            for (let i = 0; i < currentPolygon.getPath().getLength(); i++) {
+                const point = currentPolygon.getPath().getAt(i);
+                pathArray.push({ lat: point.lat(), lng: point.lng() });
+            }
+            
+            // Create saved area object
+            const savedArea = {
+                id: Date.now().toString(),
+                name: areaName,
+                area: areaInSquareFeet,
+                pathCoordinates: pathArray,
+                selected: false
+            };
+            
+            // Add to saved areas array
+            savedAreas.push(savedArea);
+            
+            // Update UI
+            renderSavedAreasList();
+            updateTotalArea();
+            
+            // Clear current drawing and form
+            currentPolygon.setMap(null);
+            currentPolygon = null;
+            document.getElementById('area-name').value = '';
+            document.getElementById('area-save-form').classList.add('hidden');
+            
+            // Show the saved areas
+            document.getElementById('total-area').classList.remove('hidden');
+        });
+        
+        // Render the list of saved areas
+        function renderSavedAreasList() {
+            const listElement = document.getElementById('saved-areas-list');
+            listElement.innerHTML = '';
+            
+            savedAreas.forEach((area, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = `area-list-item py-3 px-2 flex justify-between items-center ${area.selected ? 'selected' : ''}`;
+                listItem.dataset.id = area.id;
+                
+                listItem.innerHTML = `
+                    <div>
+                        <div class="font-medium">${area.name}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">${Math.round(area.area).toLocaleString()} sq ft</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="select-btn p-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button class="delete-btn p-1 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                
+                listElement.appendChild(listItem);
+            });
+            
+            // Add event listeners for selection and deletion
+            document.querySelectorAll('.select-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = this.closest('.area-list-item').dataset.id;
+                    toggleAreaSelection(id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = this.closest('.area-list-item').dataset.id;
+                    deleteArea(id);
+                });
+            });
+            
+            // Handle item click for selection
+            document.querySelectorAll('.area-list-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    showAreaOnMap(id);
+                });
+            });
+        }
+        
+        // Toggle area selection
+        function toggleAreaSelection(id) {
+            const area = savedAreas.find(a => a.id === id);
+            if (area) {
+                area.selected = !area.selected;
+                renderSavedAreasList();
+                updateTotalArea();
+            }
+        }
+        
+        // Delete an area
+        function deleteArea(id) {
+            savedAreas = savedAreas.filter(a => a.id !== id);
+            renderSavedAreasList();
+            updateTotalArea();
+            
+            if (savedAreas.length === 0) {
+                document.getElementById('no-areas').classList.remove('hidden');
+                document.getElementById('total-area').classList.add('hidden');
+            }
+        }
+        
+        // Show area on map
+        function showAreaOnMap(id) {
+            // Clear current drawing if any
+            if (currentPolygon) {
+                currentPolygon.setMap(null);
+                currentPolygon = null;
+            }
+            
+            const area = savedAreas.find(a => a.id === id);
+            
+            if (area) {
+                // Create polygon from saved coordinates
+                currentPolygon = new google.maps.Polygon({
+                    paths: area.pathCoordinates,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0.35,
+                    editable: false
+                });
+                
+                currentPolygon.setMap(map);
+                
+                // Center map on polygon
+                const bounds = new google.maps.LatLngBounds();
+                area.pathCoordinates.forEach(point => bounds.extend(point));
+                map.fitBounds(bounds);
+            }
+        }
+        
+        // Update total area
+        function updateTotalArea() {
+            const selectedAreas = savedAreas.filter(a => a.selected);
+            const totalAreaValue = selectedAreas.reduce((sum, area) => sum + area.area, 0);
+            
+            document.getElementById('total-area-value').textContent = Math.round(totalAreaValue).toLocaleString() + ' sq ft';
+            document.getElementById('total-area').classList.toggle('hidden', savedAreas.length === 0);
+        }
+        
+        // Use selected areas in calculator
+        document.getElementById('use-in-calculator').addEventListener('click', function() {
+            const selectedAreas = savedAreas.filter(a => a.selected);
+            if (selectedAreas.length === 0) {
+                alert('Please select at least one area from the list.');
+                return;
+            }
+            
+            const totalAreaValue = selectedAreas.reduce((sum, area) => sum + area.area, 0);
+            document.getElementById('area').value = Math.round(totalAreaValue);
+            
+            // Scroll to calculator form
+            document.getElementById('calculator-form').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Monthly rainfall data for various cities (inches)
+        const rainfallData = {
+            "Seattle, WA": [5.57, 3.50, 3.75, 2.71, 1.94, 1.57, 0.70, 0.88, 1.50, 3.48, 5.90, 5.35],
+            "Portland, OR": [5.43, 3.89, 3.56, 2.39, 2.06, 1.49, 0.64, 0.67, 1.47, 2.91, 5.27, 6.08],
+            "San Francisco, CA": [4.50, 4.05, 3.25, 1.22, 0.49, 0.16, 0.00, 0.06, 0.20, 1.12, 2.40, 4.03],
+            "Los Angeles, CA": [3.12, 3.80, 2.43, 0.91, 0.26, 0.09, 0.01, 0.04, 0.24, 0.58, 1.01, 2.33],
+            "San Diego, CA": [2.28, 2.04, 1.81, 0.78, 0.12, 0.07, 0.03, 0.01, 0.15, 0.57, 1.01, 1.53],
+            "Phoenix, AZ": [0.91, 0.92, 1.07, 0.24, 0.17, 0.06, 0.99, 0.94, 0.75, 0.59, 0.73, 0.92],
+            "Denver, CO": [0.49, 0.48, 1.29, 1.71, 2.32, 1.56, 2.16, 1.82, 1.14, 1.13, 0.75, 0.47],
+            "Dallas, TX": [2.06, 2.67, 3.49, 3.06, 4.90, 3.53, 2.10, 1.94, 2.52, 4.22, 2.67, 2.57],
+            "Houston, TX": [3.70, 3.32, 3.28, 3.58, 5.15, 5.93, 3.18, 3.83, 4.33, 4.50, 4.34, 3.74],
+            "Chicago, IL": [1.75, 1.70, 2.50, 3.38, 3.68, 4.15, 3.70, 4.90, 3.21, 3.24, 3.00, 2.43],
+            "New York, NY": [3.65, 3.09, 4.36, 4.50, 4.19, 4.41, 4.60, 4.44, 4.28, 4.40, 4.02, 4.00],
+            "Miami, FL": [2.22, 2.32, 2.38, 3.36, 6.36, 9.80, 6.45, 8.63, 8.92, 6.41, 3.47, 2.09],
+            "Atlanta, GA": [5.02, 4.68, 5.38, 4.30, 3.95, 3.63, 5.27, 3.63, 4.09, 3.11, 4.10, 4.17],
+            "Boston, MA": [3.92, 3.47, 4.32, 3.74, 3.49, 3.68, 3.43, 3.35, 3.47, 4.33, 3.95, 4.13],
+            "Minneapolis, MN": [0.90, 0.77, 1.89, 2.66, 3.36, 4.25, 4.04, 4.30, 2.89, 2.43, 1.77, 1.16],
+            "Kansas City, MO": [1.17, 1.41, 2.71, 3.69, 5.23, 5.17, 4.46, 3.91, 4.62, 3.51, 2.14, 1.53]
+        };
+
+        // San Diego County and other locations with rainfall data
+        const locationData = {
+            // Exact zip codes
+            "92082": { // Valley Center
+                name: "Valley Center, CA",
+                annual: 17.04,
+                monthly: [3.39, 4.12, 2.75, 1.29, 0.45, 0.10, 0.12, 0.06, 0.24, 0.73, 1.28, 2.51]
+            },
+            "92101": { // Downtown San Diego
+                name: "Downtown San Diego, CA",
+                annual: 10.34,
+                monthly: [2.28, 2.04, 1.81, 0.78, 0.12, 0.07, 0.03, 0.01, 0.15, 0.57, 1.01, 1.47]
+            },
+            "92067": { // Rancho Santa Fe
+                name: "Rancho Santa Fe, CA",
+                annual: 13.18,
+                monthly: [2.89, 2.52, 2.21, 1.02, 0.24, 0.11, 0.06, 0.05, 0.28, 0.74, 1.34, 1.72]
+            },
+            "91901": { // Alpine (East County)
+                name: "Alpine, CA",
+                annual: 15.82,
+                monthly: [3.42, 3.15, 2.65, 1.24, 0.32, 0.15, 0.08, 0.06, 0.36, 0.88, 1.54, 1.97]
+            }
+        };
+
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let rainfallChart = null;
+        let currentRainfallData = null;
+
+        // Populate location dropdown
+        const locationSelect = document.getElementById('location');
+        Object.keys(rainfallData).sort().forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            locationSelect.appendChild(option);
+        });
+
+        // Create custom data inputs
+        const customDataContainer = document.getElementById('custom-data-inputs');
+        months.forEach((month, index) => {
+            const inputGroup = document.createElement('div');
+            inputGroup.innerHTML = `
+                <label class="block text-xs font-medium mb-1">${month}</label>
+                <input type="number" id="custom-${index}" class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary" step="0.01" min="0" placeholder="0.00">
+            `;
+            customDataContainer.appendChild(inputGroup);
+        });
+
+        // Handle tab switching
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Update tab buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('border-primary', 'text-primary');
+                    btn.classList.add('border-transparent');
+                });
+                this.classList.add('border-primary', 'text-primary');
+                this.classList.remove('border-transparent');
+                
+                // Show appropriate tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                const targetId = this.id.replace('tab-', '') + '-tab';
+                document.getElementById(targetId).classList.remove('hidden');
+            });
+        });
+
+        // Reset custom data
+        document.getElementById('reset-custom').addEventListener('click', function() {
+            document.querySelectorAll('#custom-data-inputs input').forEach(input => {
+                input.value = '';
+            });
+        });
+
+        // Handle zip code search
+        document.getElementById('search-zipcode').addEventListener('click', searchZipCode);
+        document.getElementById('zipcode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchZipCode();
+            }
+        });
+        
+        function searchZipCode() {
+            const zipcode = document.getElementById('zipcode').value.trim();
+            
+            if (!zipcode) {
+                alert('Please enter a zip code.');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('zipcode-result').classList.remove('hidden');
+            document.getElementById('zipcode-loading').classList.remove('hidden');
+            document.getElementById('zipcode-data').classList.add('hidden');
+            document.getElementById('zipcode-error').classList.add('hidden');
+            document.getElementById('zipcode-display').textContent = zipcode;
+            
+            // First check our local data
+            if (zipcode in locationData) {
+                const data = locationData[zipcode];
+                document.getElementById('data-source').textContent = 'Local Database';
+                displayRainfallData(data.name, data.annual, data.monthly);
+                
+                // Center map on location if possible
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: zipcode }, function(results, status) {
+                    if (status === 'OK') {
+                        map.setCenter(results[0].geometry.location);
+                        map.setZoom(16);
+                    }
+                });
+                
+                return;
+            }
+            
+            // If not in local data, get location coordinates from zipcode
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: zipcode }, function(results, status) {
+                if (status === 'OK') {
+                    const location = results[0].geometry.location;
+                    const formattedAddress = results[0].formatted_address;
+                    
+                    // Set map center
+                    map.setCenter(location);
+                    map.setZoom(16);
+                    
+                    // For this demo, we'll use a nearby city's data since we can't do a real API call
+                    // In a real app, you would make an API call to a weather service here
+                    // Find the closest city in our rainfallData list
+                    let closestCity = null;
+                    let minDistance = Infinity;
+                    
+                    Object.keys(rainfallData).forEach(city => {
+                        // This is a very rough distance calculation that would be replaced
+                        // with a proper API call in a real application
+                        const cityLat = {
+                            "Seattle, WA": 47.6062,
+                            "Portland, OR": 45.5152,
+                            "San Francisco, CA": 37.7749,
+                            "Los Angeles, CA": 34.0522,
+                            "San Diego, CA": 32.7157,
+                            "Phoenix, AZ": 33.4484,
+                            "Denver, CO": 39.7392,
+                            "Dallas, TX": 32.7767,
+                            "Houston, TX": 29.7604,
+                            "Chicago, IL": 41.8781,
+                            "New York, NY": 40.7128,
+                            "Miami, FL": 25.7617,
+                            "Atlanta, GA": 33.7490,
+                            "Boston, MA": 42.3601,
+                            "Minneapolis, MN": 44.9778,
+                            "Kansas City, MO": 39.0997
+                        }[city] || 0;
+                        
+                        const cityLng = {
+                            "Seattle, WA": -122.3321,
+                            "Portland, OR": -122.6784,
+                            "San Francisco, CA": -122.4194,
+                            "Los Angeles, CA": -118.2437,
+                            "San Diego, CA": -117.1611,
+                            "Phoenix, AZ": -112.0740,
+                            "Denver, CO": -104.9903,
+                            "Dallas, TX": -96.7970,
+                            "Houston, TX": -95.3698,
+                            "Chicago, IL": -87.6298,
+                            "New York, NY": -74.0060,
+                            "Miami, FL": -80.1918,
+                            "Atlanta, GA": -84.3880,
+                            "Boston, MA": -71.0589,
+                            "Minneapolis, MN": -93.2650,
+                            "Kansas City, MO": -94.5786
+                        }[city] || 0;
+                        
+                        const distance = Math.sqrt(
+                            Math.pow(cityLat - location.lat(), 2) + 
+                            Math.pow(cityLng - location.lng(), 2)
+                        );
+                        
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestCity = city;
+                        }
+                    });
+                    
+                    if (closestCity) {
+                        document.getElementById('data-source').textContent = 'Estimated from nearest city: ' + closestCity;
+                        const monthlyData = rainfallData[closestCity];
+                        const annualTotal = monthlyData.reduce((sum, val) => sum + val, 0);
+                        displayRainfallData(formattedAddress, annualTotal, monthlyData);
+                    } else {
+                        throw new Error('Unable to determine rainfall data for this location.');
+                    }
+                } else {
+                    throw new Error('Zip code not found. Please enter a valid US zip code.');
+                }
+            });
+        }
+        
+        // Display the rainfall data on the UI
+        function displayRainfallData(locationName, annualTotal, monthlyData) {
+            document.getElementById('zipcode-loading').classList.add('hidden');
+            document.getElementById('zipcode-data').classList.remove('hidden');
+            
+            document.getElementById('zipcode-display').textContent = locationName;
+            document.getElementById('zipcode-annual').textContent = annualTotal.toFixed(2) + " inches";
+            
+            // Display monthly data
+            const zipCodeDataContainer = document.getElementById('zipcode-data');
+            zipCodeDataContainer.innerHTML = '';
+            
+            months.forEach((month, index) => {
+                const monthlyElement = document.createElement('div');
+                monthlyElement.className = 'text-center p-2 bg-gray-50 dark:bg-gray-700 rounded';
+                monthlyElement.innerHTML = `
+                    <div class="font-medium">${month.substring(0, 3)}</div>
+                    <div>${monthlyData[index].toFixed(2)}"</div>
+                `;
+                zipCodeDataContainer.appendChild(monthlyElement);
+            });
+            
+            // Save the data for calculations
+            currentRainfallData = monthlyData;
+        }
+
+        // Form submission handler
+        document.getElementById('calculator-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const area = parseFloat(document.getElementById('area').value);
+            const efficiency = parseFloat(document.getElementById('efficiency').value) / 100;
+            
+            if (isNaN(area) || area <= 0 || isNaN(efficiency) || efficiency <= 0) {
+                alert('Please enter a valid collection area and efficiency.');
+                return;
+            }
+            
+            // Determine which rainfall data to use based on active tab
+            let monthlyRainfall = null;
+            let locationName = "";
+            
+            const zipCodeTab = !document.getElementById('zipcode-tab').classList.contains('hidden');
+            const cityTab = !document.getElementById('city-tab').classList.contains('hidden');
+            const customTab = !document.getElementById('custom-tab').classList.contains('hidden');
+            
+            if (zipCodeTab && currentRainfallData) {
+                monthlyRainfall = currentRainfallData;
+                locationName = document.getElementById('zipcode-display').textContent;
+            } else if (cityTab) {
+                const location = document.getElementById('location').value;
+                if (!location) {
+                    alert('Please select a city from the dropdown.');
+                    return;
+                }
+                monthlyRainfall = rainfallData[location];
+                locationName = location;
+            } else if (customTab) {
+                // Collect values from custom inputs
+                monthlyRainfall = [];
+                let hasValue = false;
+                
+                for (let i = 0; i < 12; i++) {
+                    const value = parseFloat(document.getElementById(`custom-${i}`).value) || 0;
+                    monthlyRainfall.push(value);
+                    if (value > 0) hasValue = true;
+                }
+                
+                if (!hasValue) {
+                    alert('Please enter at least one monthly rainfall value.');
+                    return;
+                }
+                
+                locationName = "Custom Data";
+            } else {
+                alert('Please select a data source for rainfall information.');
+                return;
+            }
+            
+            // Calculate monthly collection
+            const monthlyCollection = monthlyRainfall.map(inches => {
+                return inches * area * 0.623 * efficiency; // 0.623 gallons per inch of rain per sq ft
+            });
+            
+            // Calculate totals
+            const totalRainfall = monthlyRainfall.reduce((sum, inches) => sum + inches, 0);
+            const totalCollection = monthlyCollection.reduce((sum, gallons) => sum + gallons, 0);
+            
+            // Display results
+            displayResults(locationName, area, efficiency, monthlyRainfall, monthlyCollection, totalRainfall, totalCollection);
+        });
+
+        function displayResults(location, area, efficiency, monthlyRainfall, monthlyCollection, totalRainfall, totalCollection) {
+            // Show results container and hide the placeholder
+            document.getElementById('no-results').classList.add('hidden');
+            document.getElementById('results-container').classList.remove('hidden');
+            
+            // Update summary information
+            document.getElementById('result-location').textContent = location;
+            document.getElementById('result-area').textContent = area.toLocaleString();
+            document.getElementById('result-efficiency').textContent = (efficiency * 100).toFixed(0);
+            document.getElementById('result-annual-rainfall').textContent = `${totalRainfall.toFixed(1)} inches`;
+            document.getElementById('result-annual-collection').textContent = `${Math.round(totalCollection).toLocaleString()} gallons`;
+            
+            // Generate table rows
+            const tableBody = document.getElementById('results-table-body');
+            tableBody.innerHTML = '';
+            
+            months.forEach((month, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${month}</td>
+                    <td class="px-6 py-4 text-right whitespace-nowrap">${monthlyRainfall[index].toFixed(2)}</td>
+                    <td class="px-6 py-4 text-right whitespace-nowrap">${Math.round(monthlyCollection[index]).toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Create or update chart
+            createOrUpdateChart(months, monthlyRainfall, monthlyCollection);
+        }
+
+        function createOrUpdateChart(labels, rainfallData, collectionData) {
+            const chartCanvas = document.getElementById('rainfall-chart');
+            
+            // If chart already exists, destroy it before creating a new one
+            if (rainfallChart) {
+                rainfallChart.destroy();
+            }
+            
+            // Adjust colors for dark mode
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const textColor = isDarkMode ? '#f3f4f6' : '#374151';
+            
+            // Create new chart
+            rainfallChart = new Chart(chartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Rainfall (inches)',
+                            data: rainfallData,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Water Collected (gallons)',
+                            data: collectionData,
+                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            type: 'line',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: textColor
+                            },
+                            grid: {
+                                color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Rainfall (inches)',
+                                color: textColor
+                            },
+                            ticks: {
+                                color: textColor
+                            },
+                            grid: {
+                                color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Water Collected (gallons)',
+                                color: textColor
+                            },
+                            ticks: {
+                                color: textColor
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                                color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize the map when the page loads
+        window.addEventListener('load', function() {
+            // Load the Places library for Autocomplete
+            if (typeof google !== 'undefined' && google.maps) {
+                if (typeof google.maps.places === 'undefined') {
+                    // If Places library isn't loaded, dynamically load it
+                    const script = document.createElement('script');
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=places,drawing,geometry&callback=initMap`;
+                    script.async = true;
+                    script.defer = true;
+                    document.head.appendChild(script);
+                } else {
+                    initMap();
+                }
+            } else {
+                console.error('Google Maps API not loaded properly');
+            }
+        });
+    </script>
+</body>
+</html>
