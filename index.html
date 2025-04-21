@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rainwater Harvesting Calculator</title>
+    <title>Rainwater Harvesting Calculator | The Permaculture Lab</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -16,14 +16,21 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#5D5CDE',
-                        primaryDark: '#4A49B0',
+                        permBg: '#34495E',
+                        permButton: '#EC1E7D',
+                        permLightBrown: '#D2B48C',
+                        permBrown: '#8B4513',
+                        permTan: '#F5DEB3',
                     }
                 }
             }
         }
     </script>
     <style>
+        body {
+            background-color: #34495E;
+            color: #fff;
+        }
         .dark .chart-container canvas {
             filter: invert(0.9) hue-rotate(180deg);
         }
@@ -36,26 +43,22 @@
             transition: all 0.2s;
         }
         .area-list-item:hover {
-            background-color: rgba(93, 92, 222, 0.1);
+            background-color: rgba(210, 180, 140, 0.2);
         }
         .area-list-item.selected {
-            background-color: rgba(93, 92, 222, 0.2);
+            background-color: rgba(210, 180, 140, 0.3);
         }
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
+            border: 4px solid rgba(255, 255, 255, 0.1);
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            border-left-color: #5D5CDE;
+            border-left-color: #EC1E7D;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-        .dark .spinner {
-            border-color: rgba(255, 255, 255, 0.1);
-            border-left-color: #5D5CDE;
         }
         /* Search box styling */
         .map-search-container {
@@ -70,20 +73,59 @@
         .pac-container {
             z-index: 1051 !important;
         }
+        .panel-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .area-card {
+            background-color: rgba(139, 69, 19, 0.2);
+        }
+        .button-primary {
+            background-color: #EC1E7D;
+        }
+        .button-primary:hover {
+            background-color: #d41a6d;
+        }
+        .button-secondary {
+            background-color: rgba(210, 180, 140, 0.3);
+        }
+        .button-secondary:hover {
+            background-color: rgba(210, 180, 140, 0.5);
+        }
+        .logo {
+            max-height: 80px;
+            margin: 0 auto;
+        }
+        .tab-active {
+            border-bottom-color: #EC1E7D;
+            color: #EC1E7D;
+        }
+        .category-tab {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-bottom: 2px solid transparent;
+        }
+        .category-tab:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .category-tab.active {
+            border-bottom-color: #EC1E7D;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
     </style>
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+<body>
     <div class="min-h-screen flex flex-col">
-        <header class="bg-primary dark:bg-primary text-white py-4 px-4 shadow-md">
-            <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
-                <h1 class="text-2xl font-bold mb-2 md:mb-0">Rainwater Harvesting Calculator</h1>
-                <p class="text-sm md:text-base italic">Calculate your rainwater collection potential</p>
+        <header class="py-4 px-4 shadow-md bg-permBg">
+            <div class="container mx-auto flex flex-col items-center justify-center">
+                <img src="https://github.com/welcometherain/assets/raw/main/perm%20lab%20brown2.png" alt="The Permaculture Lab Logo" class="logo mb-2">
+                <h1 class="text-2xl font-bold text-center">Rainwater Harvesting Calculator</h1>
+                <p class="text-sm md:text-base italic text-permTan">Calculate your rainwater collection potential</p>
             </div>
         </header>
 
         <main class="container mx-auto p-4 flex-grow">
             <!-- Map Area Measurement Section -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <div class="panel-card rounded-lg shadow-md p-6 mb-6">
                 <h2 class="text-xl font-semibold mb-4">Measure Collection Areas</h2>
                 
                 <div class="grid md:grid-cols-3 gap-6">
@@ -92,32 +134,40 @@
                             <label for="address-input" class="block text-sm font-medium mb-1">Search for an address:</label>
                             <div class="flex">
                                 <input type="text" id="address-input" placeholder="Enter address, city, or zip code" 
-                                    class="flex-grow p-2 border rounded-l-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                <button id="address-search-btn" class="bg-primary hover:bg-primaryDark text-white px-4 py-2 rounded-r-md">Search</button>
+                                    class="flex-grow p-2 border rounded-l-md text-base bg-gray-700 border-gray-600 text-white">
+                                <button id="address-search-btn" class="button-primary text-white px-4 py-2 rounded-r-md">Search</button>
                             </div>
                         </div>
                         
-                        <div id="map-container" class="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 relative">
+                        <div id="map-container" class="rounded-lg overflow-hidden border border-gray-600 relative">
                             <!-- Search box will be positioned here -->
                             <div class="map-search-container hidden">
                                 <input id="map-search-input" type="text" placeholder="Search for an address or location" 
-                                    class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white shadow-sm">
+                                    class="w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white shadow-sm">
                             </div>
                         </div>
-                        <div class="flex flex-wrap gap-2 mt-3">
-                            <button id="draw-polygon" class="px-3 py-2 bg-primary hover:bg-primaryDark text-white text-sm font-medium rounded transition">
+                        
+                        <!-- Category tabs for drawing -->
+                        <div class="flex border-b border-gray-600 mt-3 mb-2">
+                            <button type="button" id="tab-buildings" class="category-tab px-4 py-2 active">Buildings</button>
+                            <button type="button" id="tab-roads" class="category-tab px-4 py-2">Roads/Paved Areas</button>
+                            <button type="button" id="tab-land" class="category-tab px-4 py-2">Land/Soil</button>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button id="draw-polygon" class="px-3 py-2 button-primary text-white text-sm font-medium rounded transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
                                 </svg>
                                 Draw Area
                             </button>
-                            <button id="clear-drawing" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded transition">
+                            <button id="clear-drawing" class="px-3 py-2 button-secondary text-white text-sm font-medium rounded transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                                 Clear Drawing
                             </button>
-                            <button id="toggle-search" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded transition ml-auto">
+                            <button id="toggle-search" class="px-3 py-2 button-secondary text-white text-sm font-medium rounded transition ml-auto">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
@@ -126,14 +176,14 @@
                         </div>
                     </div>
                     
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div class="area-card rounded-lg p-4">
                         <h3 class="text-lg font-medium mb-3">Saved Areas</h3>
                         
-                        <div id="no-areas" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <div id="no-areas" class="text-center py-8 text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                             </svg>
-                            <p>Draw areas on the map to measure your roof, driveway, or other surfaces.</p>
+                            <p>Draw areas on the map to measure your roofs, roads, or soil surfaces.</p>
                         </div>
                         
                         <div id="area-save-form" class="hidden mb-4">
@@ -144,54 +194,165 @@
                             <div class="mb-3">
                                 <label for="area-name" class="block text-sm font-medium mb-1">Name this area</label>
                                 <input type="text" id="area-name" placeholder="e.g., Main Roof, Driveway" 
-                                    class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
+                                    class="w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
                             </div>
-                            <div class="mb-3">
-                                <label for="area-coefficient" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
-                                <select id="area-coefficient" class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
+                            
+                            <!-- Building coefficients (default) -->
+                            <div id="building-coefficients" class="mb-3">
+                                <label for="building-coefficient" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
+                                <select id="building-coefficient" class="coefficient-select w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
                                     <option value="custom">Custom Value</option>
-                                    <optgroup label="Roof Materials">
-                                        <option value="95">Metal Roof (95%)</option>
-                                        <option value="90" selected>Metal Roof (90%)</option>
-                                        <option value="90">Asphalt Shingles (90%)</option>
-                                        <option value="85">Asphalt Shingles (85%)</option>
-                                        <option value="85">Concrete Tile (85%)</option>
-                                        <option value="80">Concrete Tile (80%)</option>
-                                        <option value="85">Tar & Gravel (85%)</option>
-                                        <option value="80">Tar & Gravel (80%)</option>
+                                    <option value="95">Metal Roof (95%)</option>
+                                    <option value="90" selected>Metal Roof (90%)</option>
+                                    <option value="90">Asphalt Shingles (90%)</option>
+                                    <option value="85">Asphalt Shingles (85%)</option>
+                                    <option value="85">Concrete Tile (85%)</option>
+                                    <option value="80">Concrete Tile (80%)</option>
+                                    <option value="85">Tar & Gravel (85%)</option>
+                                    <option value="80">Tar & Gravel (80%)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Road coefficients (hidden by default) -->
+                            <div id="road-coefficients" class="mb-3 hidden">
+                                <label for="road-coefficient" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
+                                <select id="road-coefficient" class="coefficient-select w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
+                                    <option value="custom">Custom Value</option>
+                                    <option value="95">Asphalt/Concrete (95%)</option>
+                                    <option value="90">Asphalt/Concrete (90%)</option>
+                                    <option value="85">Asphalt/Concrete (85%)</option>
+                                    <option value="80">Asphalt/Concrete (80%)</option>
+                                    <option value="75">Asphalt/Concrete (75%)</option>
+                                    <option value="70" selected>Asphalt/Concrete (70%)</option>
+                                    <option value="85">Brick Pavement (85%)</option>
+                                    <option value="80">Brick Pavement (80%)</option>
+                                    <option value="75">Brick Pavement (75%)</option>
+                                    <option value="70">Brick Pavement (70%)</option>
+                                    <option value="60">Gravel (60%)</option>
+                                    <option value="50">Gravel (50%)</option>
+                                    <option value="40">Gravel (40%)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Land coefficients (hidden by default) -->
+                            <div id="land-coefficients" class="mb-3 hidden">
+                                <label for="land-coefficient" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
+                                <select id="land-coefficient" class="coefficient-select w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
+                                    <option value="custom">Custom Value</option>
+                                    <optgroup label="Healthy Lawn">
+                                        <option value="20">Sandy Soil (20%)</option>
+                                        <option value="10">Sandy Soil (10%)</option>
+                                        <option value="5">Sandy Soil (5%)</option>
+                                        <option value="35">Heavy Soil (35%)</option>
+                                        <option value="25">Heavy Soil (25%)</option>
+                                        <option value="13">Heavy Soil (13%)</option>
                                     </optgroup>
-                                    <optgroup label="Other Surfaces">
-                                        <option value="95">Concrete Pavement (95%)</option>
-                                        <option value="85">Brick Pavement (85%)</option>
-                                        <option value="75">Gravel (75%)</option>
-                                        <option value="35">Lawns, Sandy Soil (35%)</option>
-                                        <option value="20">Lawns, Heavy Soil (20%)</option>
+                                    <optgroup label="Clay Soil">
+                                        <option value="70">Bare (70%)</option>
+                                        <option value="60">Bare (60%)</option>
+                                        <option value="50" selected>Bare (50%)</option>
+                                        <option value="60">Light Vegetation (60%)</option>
+                                        <option value="50">Light Vegetation (50%)</option>
+                                        <option value="40">Light Vegetation (40%)</option>
+                                        <option value="50">High Vegetation (50%)</option>
+                                        <option value="40">High Vegetation (40%)</option>
+                                        <option value="30">High Vegetation (30%)</option>
+                                    </optgroup>
+                                    <optgroup label="Loam Soil">
+                                        <option value="60">Bare (60%)</option>
+                                        <option value="50">Bare (50%)</option>
+                                        <option value="40">Bare (40%)</option>
+                                        <option value="45">Light Vegetation (45%)</option>
+                                        <option value="35">Light Vegetation (35%)</option>
+                                        <option value="25">Light Vegetation (25%)</option>
+                                        <option value="35">High Vegetation (35%)</option>
+                                        <option value="25">High Vegetation (25%)</option>
+                                        <option value="15">High Vegetation (15%)</option>
+                                    </optgroup>
+                                    <optgroup label="Sandy Soil">
+                                        <option value="50">Bare (50%)</option>
+                                        <option value="40">Bare (40%)</option>
+                                        <option value="30">Bare (30%)</option>
+                                        <option value="40">Light Vegetation (40%)</option>
+                                        <option value="30">Light Vegetation (30%)</option>
+                                        <option value="20">Light Vegetation (20%)</option>
+                                        <option value="30">High Vegetation (30%)</option>
+                                        <option value="20">High Vegetation (20%)</option>
+                                        <option value="10">High Vegetation (10%)</option>
                                     </optgroup>
                                 </select>
-                                <div id="custom-coefficient-container" class="hidden mt-2">
-                                    <input type="number" id="custom-coefficient" min="1" max="100" value="90" 
-                                        class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
-                                </div>
                             </div>
-                            <button id="save-area" class="w-full py-2 px-3 bg-primary hover:bg-primaryDark text-white font-medium rounded-md transition">
+                            
+                            <div id="custom-coefficient-container" class="hidden mt-2">
+                                <input type="number" id="custom-coefficient" min="1" max="100" value="90" 
+                                    class="w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
+                            </div>
+                            
+                            <button id="save-area" class="w-full py-2 px-3 button-primary text-white font-medium rounded-md transition">
                                 Save Area
                             </button>
                         </div>
                         
-                        <ul id="saved-areas-list" class="divide-y divide-gray-200 dark:divide-gray-600 max-h-64 overflow-y-auto">
-                            <!-- Saved areas will be displayed here -->
-                        </ul>
+                        <!-- Building Areas -->
+                        <div id="building-areas-container" class="mb-4">
+                            <h4 class="font-medium text-sm uppercase text-permTan mb-2">Buildings</h4>
+                            <ul id="building-areas-list" class="divide-y divide-gray-600 max-h-32 overflow-y-auto">
+                                <!-- Building areas will be displayed here -->
+                            </ul>
+                            <div id="building-total" class="mt-2 pt-2 border-t border-gray-600 hidden">
+                                <div class="flex justify-between text-sm">
+                                    <span>Total Building Area:</span>
+                                    <span id="building-area-value" class="font-bold">0 sq ft</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Avg. Runoff Coefficient:</span>
+                                    <span id="building-coefficient-value" class="font-bold">0%</span>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <div id="total-area" class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600 hidden">
+                        <!-- Road Areas -->
+                        <div id="road-areas-container" class="mb-4">
+                            <h4 class="font-medium text-sm uppercase text-permTan mb-2">Roads/Paved Areas</h4>
+                            <ul id="road-areas-list" class="divide-y divide-gray-600 max-h-32 overflow-y-auto">
+                                <!-- Road areas will be displayed here -->
+                            </ul>
+                            <div id="road-total" class="mt-2 pt-2 border-t border-gray-600 hidden">
+                                <div class="flex justify-between text-sm">
+                                    <span>Total Road Area:</span>
+                                    <span id="road-area-value" class="font-bold">0 sq ft</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Avg. Runoff Coefficient:</span>
+                                    <span id="road-coefficient-value" class="font-bold">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Land Areas -->
+                        <div id="land-areas-container" class="mb-4">
+                            <h4 class="font-medium text-sm uppercase text-permTan mb-2">Land/Soil</h4>
+                            <ul id="land-areas-list" class="divide-y divide-gray-600 max-h-32 overflow-y-auto">
+                                <!-- Land areas will be displayed here -->
+                            </ul>
+                            <div id="land-total" class="mt-2 pt-2 border-t border-gray-600 hidden">
+                                <div class="flex justify-between text-sm">
+                                    <span>Total Land Area:</span>
+                                    <span id="land-area-value" class="font-bold">0 sq ft</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Avg. Runoff Coefficient:</span>
+                                    <span id="land-coefficient-value" class="font-bold">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="total-area" class="mt-4 pt-3 border-t border-gray-600 hidden">
                             <div class="flex justify-between">
-                                <span class="font-medium">Total Area:</span>
+                                <span class="font-medium">Total Combined Area:</span>
                                 <span id="total-area-value" class="font-bold">0 sq ft</span>
                             </div>
-                            <div class="flex justify-between mt-1">
-                                <span class="font-medium">Avg. Runoff Coefficient:</span>
-                                <span id="total-coefficient-value" class="font-bold">0%</span>
-                            </div>
-                            <button id="use-in-calculator" class="w-full mt-3 py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition">
+                            <button id="use-in-calculator" class="w-full mt-3 py-2 px-3 button-primary text-white font-medium rounded-md transition">
                                 Use in Calculator
                             </button>
                         </div>
@@ -201,19 +362,19 @@
             
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- Input Form Section -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold mb-4">Enter Your Information</h2>
+                <div class="panel-card rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Enter Rainfall Information</h2>
                     
                     <form id="calculator-form" class="space-y-5">
                         <!-- Rainfall Data Section -->
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+                        <div class="border border-gray-600 rounded-lg p-4 mb-4">
                             <h3 class="text-lg font-medium mb-3">Rainfall Data</h3>
                             
                             <!-- Tab Navigation -->
-                            <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
-                                <button type="button" id="tab-zipcode" class="tab-btn px-4 py-2 border-b-2 border-primary text-primary font-medium">Zip Code</button>
-                                <button type="button" id="tab-city" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-primary">City</button>
-                                <button type="button" id="tab-custom" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-primary">Custom Data</button>
+                            <div class="flex border-b border-gray-600 mb-4">
+                                <button type="button" id="tab-zipcode" class="tab-btn px-4 py-2 border-b-2 tab-active font-medium">Zip Code</button>
+                                <button type="button" id="tab-city" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-permButton">City</button>
+                                <button type="button" id="tab-custom" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:text-permButton">Custom Data</button>
                             </div>
                             
                             <!-- Zip Code Tab -->
@@ -222,12 +383,12 @@
                                     <label for="zipcode" class="block text-sm font-medium mb-1">Enter Zip Code</label>
                                     <div class="flex">
                                         <input type="text" id="zipcode" placeholder="e.g., 92101" 
-                                            class="flex-grow p-3 border rounded-l-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
-                                        <button type="button" id="search-zipcode" class="bg-primary hover:bg-primaryDark text-white px-4 rounded-r-md">
+                                            class="flex-grow p-3 border rounded-l-md text-base bg-gray-700 border-gray-600 text-white">
+                                        <button type="button" id="search-zipcode" class="button-primary text-white px-4 rounded-r-md">
                                             <span>Search</span>
                                         </button>
                                     </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <p class="text-xs text-gray-300 mt-1">
                                         Get rainfall data for your specific location.
                                     </p>
                                 </div>
@@ -235,7 +396,7 @@
                                 <div id="zipcode-result" class="hidden">
                                     <div class="flex items-center justify-between">
                                         <h4 class="font-medium" id="zipcode-location">Rainfall Data for: <span id="zipcode-display"></span></h4>
-                                        <span class="text-xs text-gray-500">Data source: <span id="data-source">Database</span></span>
+                                        <span class="text-xs text-gray-300">Data source: <span id="data-source">Database</span></span>
                                     </div>
                                     <div class="mt-2">
                                         <div class="flex justify-between text-sm">
@@ -250,7 +411,7 @@
                                                 <!-- Zip code monthly data will be populated here -->
                                             </div>
                                         </div>
-                                        <div id="zipcode-error" class="hidden mt-3 text-sm p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded">
+                                        <div id="zipcode-error" class="hidden mt-3 text-sm p-3 bg-red-900/20 text-red-300 rounded">
                                             Error fetching rainfall data. Please try again or enter a different location.
                                         </div>
                                     </div>
@@ -262,7 +423,7 @@
                                 <div>
                                     <label for="location" class="block text-sm font-medium mb-1">Select Your Location</label>
                                     <select id="location" name="location"
-                                        class="w-full p-3 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
+                                        class="w-full p-3 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
                                         <option value="" disabled selected>Choose a city</option>
                                         <!-- Locations will be populated by JavaScript -->
                                     </select>
@@ -274,61 +435,126 @@
                                 <div>
                                     <div class="flex justify-between mb-2">
                                         <label class="block text-sm font-medium">Enter Monthly Rainfall Amounts (inches)</label>
-                                        <button type="button" id="reset-custom" class="text-xs text-primary">Reset Data</button>
+                                        <button type="button" id="reset-custom" class="text-xs text-permButton">Reset Data</button>
                                     </div>
                                     <div class="grid grid-cols-4 gap-2" id="custom-data-inputs">
                                         <!-- Month inputs will be populated by JavaScript -->
                                     </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <p class="text-xs text-gray-300 mt-1">
                                         Enter your own rainfall data if you have more accurate local measurements.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label for="area" class="block text-sm font-medium mb-1">Collection Surface Area (square feet)</label>
-                            <input type="number" id="area" name="area" required min="10" placeholder="e.g., 1200" 
-                                class="w-full p-3 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Enter the square footage of your roof or other collection surface.
-                            </p>
-                        </div>
-
-                        <div>
-                            <label for="efficiency" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
-                            <input type="number" id="efficiency" name="efficiency" value="85" min="1" max="100" 
-                                class="w-full p-3 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Percentage of rainfall that will be collected from the surface. Typical values: Metal Roof (90-95%), Asphalt (85-90%), Concrete (80-85%), Tar & Gravel (80-85%)
-                            </p>
-                        </div>
-
-                        <button type="submit" class="w-full py-3 px-4 bg-primary hover:bg-primaryDark text-white font-medium rounded-md transition duration-150 ease-in-out">
+                        <button type="submit" class="w-full py-3 px-4 button-primary text-white font-medium rounded-md transition duration-150 ease-in-out">
                             Calculate Potential
                         </button>
                     </form>
                 </div>
 
                 <!-- Results Section -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <div class="panel-card rounded-lg shadow-md p-6">
                     <h2 class="text-xl font-semibold mb-4">Rainwater Harvesting Potential</h2>
                     
                     <div id="results-container" class="hidden">
                         <div class="mb-6">
                             <h3 class="text-lg font-medium">Location: <span id="result-location" class="font-normal"></span></h3>
-                            <p class="mt-1">Collection Area: <span id="result-area"></span> sq ft</p>
-                            <p class="mt-1">Runoff Coefficient: <span id="result-efficiency"></span>%</p>
+                            <p class="mt-1">Annual Rainfall: <span id="result-annual-rainfall"></span></p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 mb-6">
-                            <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                                <p class="text-sm text-blue-700 dark:text-blue-300">Annual Rainfall</p>
-                                <p class="text-2xl font-bold" id="result-annual-rainfall"></p>
+                        <!-- Results by category -->
+                        <div class="space-y-4 mb-6">
+                            <!-- Building results -->
+                            <div id="building-results" class="border border-gray-600 rounded-lg p-4 hidden">
+                                <h3 class="text-lg font-medium mb-2">Buildings</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-300">Collection Area</p>
+                                        <p class="text-lg font-bold" id="result-building-area"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Runoff Coefficient</p>
+                                        <p class="text-lg font-bold" id="result-building-coefficient"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Annual Collection</p>
+                                        <p class="text-lg font-bold" id="result-building-gallons"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Monthly Average</p>
+                                        <p class="text-lg font-bold" id="result-building-monthly"></p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
-                                <p class="text-sm text-green-700 dark:text-green-300">Annual Collection</p>
-                                <p class="text-2xl font-bold" id="result-annual-collection"></p>
+                            
+                            <!-- Road results -->
+                            <div id="road-results" class="border border-gray-600 rounded-lg p-4 hidden">
+                                <h3 class="text-lg font-medium mb-2">Roads/Paved Areas</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-300">Collection Area</p>
+                                        <p class="text-lg font-bold" id="result-road-area"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Runoff Coefficient</p>
+                                        <p class="text-lg font-bold" id="result-road-coefficient"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Annual Collection</p>
+                                        <p class="text-lg font-bold" id="result-road-gallons"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Monthly Average</p>
+                                        <p class="text-lg font-bold" id="result-road-monthly"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Land results -->
+                            <div id="land-results" class="border border-gray-600 rounded-lg p-4 hidden">
+                                <h3 class="text-lg font-medium mb-2">Land/Soil</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-300">Collection Area</p>
+                                        <p class="text-lg font-bold" id="result-land-area"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Runoff Coefficient</p>
+                                        <p class="text-lg font-bold" id="result-land-coefficient"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Annual Collection</p>
+                                        <p class="text-lg font-bold" id="result-land-gallons"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Monthly Average</p>
+                                        <p class="text-lg font-bold" id="result-land-monthly"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Total results -->
+                            <div id="total-results" class="bg-permButton/20 border border-permButton rounded-lg p-4">
+                                <h3 class="text-lg font-medium mb-2">Total Potential</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-300">Total Area</p>
+                                        <p class="text-lg font-bold" id="result-total-area"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Avg. Runoff Coefficient</p>
+                                        <p class="text-lg font-bold" id="result-total-coefficient"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Annual Collection</p>
+                                        <p class="text-lg font-bold" id="result-total-gallons"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-300">Monthly Average</p>
+                                        <p class="text-lg font-bold" id="result-total-monthly"></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -337,15 +563,15 @@
                         </div>
 
                         <div class="overflow-x-auto mt-6">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
+                            <table class="min-w-full divide-y divide-gray-600">
+                                <thead class="bg-gray-700">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Month</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rainfall (in)</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Water Collected (gal)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Month</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Rainfall (in)</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Water Collected (gal)</th>
                                     </tr>
                                 </thead>
-                                <tbody id="results-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <tbody id="results-table-body" class="divide-y divide-gray-600">
                                     <!-- Results will be populated by JavaScript -->
                                 </tbody>
                             </table>
@@ -356,33 +582,24 @@
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">No Calculations Yet</h3>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fill out the form to see your rainwater harvesting potential.</p>
+                        <h3 class="mt-2 text-lg font-medium text-white">No Calculations Yet</h3>
+                        <p class="mt-1 text-sm text-gray-300">Fill out the form to see your rainwater harvesting potential.</p>
                     </div>
                 </div>
             </div>
         </main>
 
-        <footer class="bg-gray-100 dark:bg-gray-800 py-4 px-4 mt-8">
-            <div class="container mx-auto text-center text-sm text-gray-600 dark:text-gray-400">
+        <footer class="bg-permBg py-4 px-4 mt-8 border-t border-gray-600">
+            <div class="container mx-auto text-center text-sm text-gray-300">
                 <p>This calculator provides estimates based on historical rainfall data. Actual results may vary.</p>
-                <p class="mt-1">© 2023 Rainwater Harvesting Calculator</p>
+                <p class="mt-1">© 2023 The Permaculture Lab</p>
             </div>
         </footer>
     </div>
 
     <script>
-        // Initialize dark mode
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
+        // Initialize dark mode (not needed for this app since it has a fixed dark theme)
+        document.documentElement.classList.add('dark');
 
         // Map variables
         let map;
@@ -393,6 +610,7 @@
         let polygonsOnMap = new Map(); // Map to store polygons with their IDs
         let editMode = false;
         let editingAreaId = null;
+        let currentCategory = 'buildings'; // Default category
         
         // Initialize map 
         function initMap() {
@@ -410,11 +628,11 @@
                 zoomControl: true,
                 tilt: 0, // Disable the 45-degree tilt
                 scrollwheel: true, // Enable mouse wheel zooming
-                styles: document.documentElement.classList.contains('dark') ? [
+                styles: [
                     { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
                     { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
                     { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] }
-                ] : []
+                ]
             });
             
             // Create drawing manager
@@ -459,8 +677,8 @@
                     const area = savedAreas.find(a => a.id === editingAreaId);
                     if (area) {
                         document.getElementById('area-name').value = area.name;
-                        // Set the coefficient dropdown
-                        const coefficientSelect = document.getElementById('area-coefficient');
+                        // Set the coefficient dropdown based on category
+                        const coefficientSelect = document.getElementById(`${area.category}-coefficient`);
                         const options = Array.from(coefficientSelect.options);
                         const matchingOption = options.find(option => parseInt(option.value) === area.coefficient);
                         
@@ -574,14 +792,46 @@
             }
         }
         
-        // Handle material/coefficient selection
-        document.getElementById('area-coefficient').addEventListener('change', function() {
-            const customContainer = document.getElementById('custom-coefficient-container');
-            if (this.value === 'custom') {
-                customContainer.classList.remove('hidden');
-            } else {
-                customContainer.classList.add('hidden');
-            }
+        // Handle category tabs
+        document.getElementById('tab-buildings').addEventListener('click', function() {
+            setActiveCategory('buildings');
+        });
+        
+        document.getElementById('tab-roads').addEventListener('click', function() {
+            setActiveCategory('roads');
+        });
+        
+        document.getElementById('tab-land').addEventListener('click', function() {
+            setActiveCategory('land');
+        });
+        
+        function setActiveCategory(category) {
+            // Update active tab
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`tab-${category}`).classList.add('active');
+            
+            // Show corresponding coefficient dropdown
+            document.querySelectorAll('[id$=-coefficients]').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.getElementById(`${category}-coefficients`).classList.remove('hidden');
+            
+            // Update current category
+            currentCategory = category;
+        }
+        
+        // Handle coefficient select change for all coefficient dropdowns
+        document.querySelectorAll('.coefficient-select').forEach(select => {
+            select.addEventListener('change', function() {
+                const customContainer = document.getElementById('custom-coefficient-container');
+                if (this.value === 'custom') {
+                    customContainer.classList.remove('hidden');
+                } else {
+                    customContainer.classList.add('hidden');
+                }
+            });
         });
         
         // Handle map action buttons
@@ -629,9 +879,9 @@
                 return;
             }
             
-            // Get the coefficient value
+            // Get the coefficient value based on current category
             let coefficient;
-            const coefficientSelect = document.getElementById('area-coefficient');
+            const coefficientSelect = document.getElementById(`${currentCategory}-coefficient`);
             if (coefficientSelect.value === 'custom') {
                 coefficient = parseInt(document.getElementById('custom-coefficient').value);
                 if (isNaN(coefficient) || coefficient < 1 || coefficient > 100) {
@@ -662,13 +912,14 @@
                     savedAreas[areaIndex].area = areaInSquareFeet;
                     savedAreas[areaIndex].pathCoordinates = pathArray;
                     savedAreas[areaIndex].coefficient = coefficient;
+                    savedAreas[areaIndex].category = currentCategory;
                     
                     // Update the polygon on the map
                     if (polygonsOnMap.has(editingAreaId)) {
                         polygonsOnMap.get(editingAreaId).setMap(null);
                     }
                     
-                    createPolygonOnMap(editingAreaId, pathArray, savedAreas[areaIndex].selected);
+                    createPolygonOnMap(editingAreaId, pathArray, savedAreas[areaIndex].selected, currentCategory);
                 }
                 
                 // Reset edit mode
@@ -685,25 +936,25 @@
                     area: areaInSquareFeet,
                     pathCoordinates: pathArray,
                     coefficient: coefficient,
-                    selected: false
+                    category: currentCategory,
+                    selected: true // Auto-select new areas
                 };
                 
                 // Add to saved areas array
                 savedAreas.push(savedArea);
                 
                 // Add the polygon to the map
-                createPolygonOnMap(newId, pathArray, false);
+                createPolygonOnMap(newId, pathArray, true, currentCategory);
             }
             
             // Update UI
             renderSavedAreasList();
-            updateTotalArea();
+            updateAreaTotals();
             
             // Clear current drawing and form
             currentPolygon.setMap(null);
             currentPolygon = null;
             document.getElementById('area-name').value = '';
-            document.getElementById('area-coefficient').value = '90'; // Reset to default
             document.getElementById('custom-coefficient-container').classList.add('hidden');
             document.getElementById('area-save-form').classList.add('hidden');
             
@@ -712,13 +963,42 @@
         });
         
         // Helper function to create a polygon on the map
-        function createPolygonOnMap(id, pathCoordinates, isSelected) {
+        function createPolygonOnMap(id, pathCoordinates, isSelected, category) {
+            // Set polygon color based on category
+            let fillColor, strokeColor;
+            
+            if (isSelected) {
+                // Selected colors by category
+                if (category === 'buildings') {
+                    fillColor = '#EC1E7D';
+                    strokeColor = '#EC1E7D';
+                } else if (category === 'roads') {
+                    fillColor = '#F57C00';
+                    strokeColor = '#F57C00';
+                } else if (category === 'land') {
+                    fillColor = '#43A047';
+                    strokeColor = '#43A047';
+                }
+            } else {
+                // Unselected colors by category
+                if (category === 'buildings') {
+                    fillColor = '#880E4F';
+                    strokeColor = '#880E4F';
+                } else if (category === 'roads') {
+                    fillColor = '#A04000';
+                    strokeColor = '#A04000';
+                } else if (category === 'land') {
+                    fillColor = '#1B5E20';
+                    strokeColor = '#1B5E20';
+                }
+            }
+            
             const polygon = new google.maps.Polygon({
                 paths: pathCoordinates,
-                strokeColor: isSelected ? '#00FF00' : '#FF0000',
+                strokeColor: strokeColor,
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
-                fillColor: isSelected ? '#00FF00' : '#FF0000',
+                fillColor: fillColor,
                 fillOpacity: 0.35,
                 editable: false,
                 map: map
@@ -738,12 +1018,46 @@
             return polygon;
         }
         
-        // Render the list of saved areas
+        // Render the list of saved areas by category
         function renderSavedAreasList() {
-            const listElement = document.getElementById('saved-areas-list');
-            listElement.innerHTML = '';
+            // Clear all lists
+            document.getElementById('building-areas-list').innerHTML = '';
+            document.getElementById('road-areas-list').innerHTML = '';
+            document.getElementById('land-areas-list').innerHTML = '';
             
-            savedAreas.forEach((area, index) => {
+            // Reset area totals display
+            document.getElementById('building-total').classList.add('hidden');
+            document.getElementById('road-total').classList.add('hidden');
+            document.getElementById('land-total').classList.add('hidden');
+            
+            // Group areas by category
+            const buildingAreas = savedAreas.filter(a => a.category === 'buildings');
+            const roadAreas = savedAreas.filter(a => a.category === 'roads');
+            const landAreas = savedAreas.filter(a => a.category === 'land');
+            
+            // Render building areas
+            renderAreaList(buildingAreas, 'building-areas-list');
+            
+            // Render road areas
+            renderAreaList(roadAreas, 'road-areas-list');
+            
+            // Render land areas
+            renderAreaList(landAreas, 'land-areas-list');
+            
+            // Update visibility of sections based on whether they have areas
+            document.getElementById('building-total').classList.toggle('hidden', buildingAreas.length === 0);
+            document.getElementById('road-total').classList.toggle('hidden', roadAreas.length === 0);
+            document.getElementById('land-total').classList.toggle('hidden', landAreas.length === 0);
+            
+            // Show/hide total area section
+            document.getElementById('total-area').classList.toggle('hidden', savedAreas.length === 0);
+        }
+        
+        // Helper function to render a list of areas
+        function renderAreaList(areas, listId) {
+            const listElement = document.getElementById(listId);
+            
+            areas.forEach(area => {
                 const listItem = document.createElement('li');
                 listItem.className = `area-list-item py-3 px-2 flex justify-between items-center ${area.selected ? 'selected' : ''}`;
                 listItem.dataset.id = area.id;
@@ -751,22 +1065,22 @@
                 listItem.innerHTML = `
                     <div>
                         <div class="font-medium">${area.name}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                        <div class="text-sm text-gray-300">
                             ${Math.round(area.area).toLocaleString()} sq ft · ${area.coefficient}% runoff
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button class="select-btn p-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" title="Select/Deselect">
+                        <button class="select-btn p-1 text-gray-300 hover:text-permButton" title="Select/Deselect">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                         </button>
-                        <button class="edit-btn p-1 text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-500" title="Edit">
+                        <button class="edit-btn p-1 text-gray-300 hover:text-blue-400" title="Edit">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                             </svg>
                         </button>
-                        <button class="delete-btn p-1 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-500" title="Delete">
+                        <button class="delete-btn p-1 text-gray-300 hover:text-red-400" title="Delete">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                             </svg>
@@ -777,36 +1091,33 @@
                 listElement.appendChild(listItem);
             });
             
-            // Add event listeners for select, edit, and delete
-            document.querySelectorAll('.select-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const id = this.closest('.area-list-item').dataset.id;
-                    toggleAreaSelection(id);
-                });
+            // Add event listeners to all buttons in this list
+            const buttons = listElement.querySelectorAll('button');
+            buttons.forEach(btn => {
+                const id = btn.closest('.area-list-item').dataset.id;
+                
+                if (btn.classList.contains('select-btn')) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        toggleAreaSelection(id);
+                    });
+                } else if (btn.classList.contains('edit-btn')) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        editArea(id);
+                    });
+                } else if (btn.classList.contains('delete-btn')) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        deleteArea(id);
+                    });
+                }
             });
             
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const id = this.closest('.area-list-item').dataset.id;
-                    editArea(id);
-                });
-            });
-            
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const id = this.closest('.area-list-item').dataset.id;
-                    deleteArea(id);
-                });
-            });
-            
-            // Handle item click for showing on map
-            document.querySelectorAll('.area-list-item').forEach(item => {
+            // Add click event to show area on map
+            listElement.querySelectorAll('.area-list-item').forEach(item => {
                 item.addEventListener('click', function() {
-                    const id = this.dataset.id;
-                    showAreaOnMap(id);
+                    showAreaOnMap(this.dataset.id);
                 });
             });
         }
@@ -820,6 +1131,9 @@
             // Set edit mode
             editMode = true;
             editingAreaId = id;
+            
+            // Switch to the area's category
+            setActiveCategory(area.category);
             
             // Create editable polygon from saved coordinates
             if (currentPolygon) {
@@ -852,7 +1166,7 @@
             document.getElementById('measured-area').textContent = Math.round(area.area).toLocaleString() + ' sq ft';
             
             // Set the appropriate coefficient
-            const coefficientSelect = document.getElementById('area-coefficient');
+            const coefficientSelect = document.getElementById(`${area.category}-coefficient`);
             const options = Array.from(coefficientSelect.options);
             const matchingOption = options.find(option => parseInt(option.value) === area.coefficient);
             
@@ -881,15 +1195,44 @@
                 
                 // Update the polygon color on the map
                 if (polygonsOnMap.has(id)) {
+                    // Get selected state and category for color
                     const polygon = polygonsOnMap.get(id);
+                    let fillColor, strokeColor;
+                    
+                    if (area.selected) {
+                        // Selected colors by category
+                        if (area.category === 'buildings') {
+                            fillColor = '#EC1E7D';
+                            strokeColor = '#EC1E7D';
+                        } else if (area.category === 'roads') {
+                            fillColor = '#F57C00';
+                            strokeColor = '#F57C00';
+                        } else if (area.category === 'land') {
+                            fillColor = '#43A047';
+                            strokeColor = '#43A047';
+                        }
+                    } else {
+                        // Unselected colors by category
+                        if (area.category === 'buildings') {
+                            fillColor = '#880E4F';
+                            strokeColor = '#880E4F';
+                        } else if (area.category === 'roads') {
+                            fillColor = '#A04000';
+                            strokeColor = '#A04000';
+                        } else if (area.category === 'land') {
+                            fillColor = '#1B5E20';
+                            strokeColor = '#1B5E20';
+                        }
+                    }
+                    
                     polygon.setOptions({
-                        strokeColor: area.selected ? '#00FF00' : '#FF0000',
-                        fillColor: area.selected ? '#00FF00' : '#FF0000'
+                        strokeColor: strokeColor,
+                        fillColor: fillColor
                     });
                 }
                 
                 renderSavedAreasList();
-                updateTotalArea();
+                updateAreaTotals();
             }
         }
         
@@ -903,7 +1246,7 @@
             
             savedAreas = savedAreas.filter(a => a.id !== id);
             renderSavedAreasList();
-            updateTotalArea();
+            updateAreaTotals();
             
             if (savedAreas.length === 0) {
                 document.getElementById('no-areas').classList.remove('hidden');
@@ -923,43 +1266,58 @@
             }
         }
         
-        // Update total area
-        function updateTotalArea() {
-            const selectedAreas = savedAreas.filter(a => a.selected);
-            const totalAreaValue = selectedAreas.reduce((sum, area) => sum + area.area, 0);
+        // Update area totals
+        function updateAreaTotals() {
+            // Group selected areas by category
+            const buildingAreas = savedAreas.filter(a => a.category === 'buildings' && a.selected);
+            const roadAreas = savedAreas.filter(a => a.category === 'roads' && a.selected);
+            const landAreas = savedAreas.filter(a => a.category === 'land' && a.selected);
             
-            // Calculate weighted average coefficient
-            let weightedCoefficient = 0;
-            if (totalAreaValue > 0) {
-                weightedCoefficient = selectedAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / totalAreaValue;
-            }
+            // Calculate building totals
+            const buildingTotalArea = buildingAreas.reduce((sum, area) => sum + area.area, 0);
+            const buildingWeightedCoefficient = buildingTotalArea > 0 
+                ? buildingAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / buildingTotalArea 
+                : 0;
             
-            document.getElementById('total-area-value').textContent = Math.round(totalAreaValue).toLocaleString() + ' sq ft';
-            document.getElementById('total-coefficient-value').textContent = Math.round(weightedCoefficient) + '%';
-            document.getElementById('total-area').classList.toggle('hidden', savedAreas.length === 0);
+            // Calculate road totals
+            const roadTotalArea = roadAreas.reduce((sum, area) => sum + area.area, 0);
+            const roadWeightedCoefficient = roadTotalArea > 0 
+                ? roadAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / roadTotalArea 
+                : 0;
+            
+            // Calculate land totals
+            const landTotalArea = landAreas.reduce((sum, area) => sum + area.area, 0);
+            const landWeightedCoefficient = landTotalArea > 0 
+                ? landAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / landTotalArea 
+                : 0;
+            
+            // Calculate grand total of all selected areas
+            const allSelectedAreas = savedAreas.filter(a => a.selected);
+            const totalArea = allSelectedAreas.reduce((sum, area) => sum + area.area, 0);
+            const weightedCoefficient = totalArea > 0 
+                ? allSelectedAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / totalArea 
+                : 0;
+            
+            // Update UI for buildings
+            document.getElementById('building-area-value').textContent = Math.round(buildingTotalArea).toLocaleString() + ' sq ft';
+            document.getElementById('building-coefficient-value').textContent = Math.round(buildingWeightedCoefficient) + '%';
+            
+            // Update UI for roads
+            document.getElementById('road-area-value').textContent = Math.round(roadTotalArea).toLocaleString() + ' sq ft';
+            document.getElementById('road-coefficient-value').textContent = Math.round(roadWeightedCoefficient) + '%';
+            
+            // Update UI for land
+            document.getElementById('land-area-value').textContent = Math.round(landTotalArea).toLocaleString() + ' sq ft';
+            document.getElementById('land-coefficient-value').textContent = Math.round(landWeightedCoefficient) + '%';
+            
+            // Update UI for total
+            document.getElementById('total-area-value').textContent = Math.round(totalArea).toLocaleString() + ' sq ft';
         }
         
         // Use selected areas in calculator
         document.getElementById('use-in-calculator').addEventListener('click', function() {
-            const selectedAreas = savedAreas.filter(a => a.selected);
-            if (selectedAreas.length === 0) {
-                alert('Please select at least one area from the list.');
-                return;
-            }
-            
-            const totalAreaValue = selectedAreas.reduce((sum, area) => sum + area.area, 0);
-            
-            // Calculate weighted average coefficient
-            let weightedCoefficient = 0;
-            if (totalAreaValue > 0) {
-                weightedCoefficient = selectedAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / totalAreaValue;
-            }
-            
-            document.getElementById('area').value = Math.round(totalAreaValue);
-            document.getElementById('efficiency').value = Math.round(weightedCoefficient);
-            
-            // Scroll to calculator form
-            document.getElementById('calculator-form').scrollIntoView({ behavior: 'smooth' });
+            // Calculate rainfall amounts for all categories
+            calculateRainwaterPotential();
         });
 
         // Monthly rainfall data for various cities (inches)
@@ -1026,7 +1384,7 @@
             const inputGroup = document.createElement('div');
             inputGroup.innerHTML = `
                 <label class="block text-xs font-medium mb-1">${month}</label>
-                <input type="number" id="custom-${index}" class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary" step="0.01" min="0" placeholder="0.00">
+                <input type="number" id="custom-${index}" class="w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white" step="0.01" min="0" placeholder="0.00">
             `;
             customDataContainer.appendChild(inputGroup);
         });
@@ -1036,10 +1394,10 @@
             button.addEventListener('click', function() {
                 // Update tab buttons
                 document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('border-primary', 'text-primary');
+                    btn.classList.remove('tab-active');
                     btn.classList.add('border-transparent');
                 });
-                this.classList.add('border-primary', 'text-primary');
+                this.classList.add('tab-active');
                 this.classList.remove('border-transparent');
                 
                 // Show appropriate tab content
@@ -1196,7 +1554,7 @@
             
             months.forEach((month, index) => {
                 const monthlyElement = document.createElement('div');
-                monthlyElement.className = 'text-center p-2 bg-gray-50 dark:bg-gray-700 rounded';
+                monthlyElement.className = 'text-center p-2 bg-gray-600 rounded';
                 monthlyElement.innerHTML = `
                     <div class="font-medium">${month.substring(0, 3)}</div>
                     <div>${monthlyData[index].toFixed(2)}"</div>
@@ -1211,16 +1569,11 @@
         // Form submission handler
         document.getElementById('calculator-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Get form values
-            const area = parseFloat(document.getElementById('area').value);
-            const efficiency = parseFloat(document.getElementById('efficiency').value) / 100;
-            
-            if (isNaN(area) || area <= 0 || isNaN(efficiency) || efficiency <= 0) {
-                alert('Please enter a valid collection area and runoff coefficient.');
-                return;
-            }
-            
+            calculateRainwaterPotential();
+        });
+        
+        // Calculate rainwater potential
+        function calculateRainwaterPotential() {
             // Determine which rainfall data to use based on active tab
             let monthlyRainfall = null;
             let locationName = "";
@@ -1262,30 +1615,116 @@
                 return;
             }
             
-            // Calculate monthly collection
-            const monthlyCollection = monthlyRainfall.map(inches => {
-                return inches * area * 0.623 * efficiency; // 0.623 gallons per inch of rain per sq ft
-            });
-            
-            // Calculate totals
+            // Calculate totals for each category
             const totalRainfall = monthlyRainfall.reduce((sum, inches) => sum + inches, 0);
-            const totalCollection = monthlyCollection.reduce((sum, gallons) => sum + gallons, 0);
+            
+            // Group selected areas by category
+            const buildingAreas = savedAreas.filter(a => a.category === 'buildings' && a.selected);
+            const roadAreas = savedAreas.filter(a => a.category === 'roads' && a.selected);
+            const landAreas = savedAreas.filter(a => a.category === 'land' && a.selected);
+            
+            // Building calculations
+            const buildingArea = buildingAreas.reduce((sum, area) => sum + area.area, 0);
+            const buildingCoeff = buildingArea > 0 
+                ? buildingAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / buildingArea / 100
+                : 0;
+            const buildingGallons = totalRainfall * buildingArea * 0.623 * buildingCoeff;
+            
+            // Road calculations
+            const roadArea = roadAreas.reduce((sum, area) => sum + area.area, 0);
+            const roadCoeff = roadArea > 0 
+                ? roadAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / roadArea / 100
+                : 0;
+            const roadGallons = totalRainfall * roadArea * 0.623 * roadCoeff;
+            
+            // Land calculations
+            const landArea = landAreas.reduce((sum, area) => sum + area.area, 0);
+            const landCoeff = landArea > 0 
+                ? landAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / landArea / 100
+                : 0;
+            const landGallons = totalRainfall * landArea * 0.623 * landCoeff;
+            
+            // Total calculations
+            const totalArea = buildingArea + roadArea + landArea;
+            const weightedCoeff = totalArea > 0
+                ? (buildingArea * buildingCoeff + roadArea * roadCoeff + landArea * landCoeff) / totalArea
+                : 0;
+            const totalGallons = buildingGallons + roadGallons + landGallons;
+            
+            // Calculate monthly collections for chart
+            const buildingMonthly = monthlyRainfall.map(inches => inches * buildingArea * 0.623 * buildingCoeff);
+            const roadMonthly = monthlyRainfall.map(inches => inches * roadArea * 0.623 * roadCoeff);
+            const landMonthly = monthlyRainfall.map(inches => inches * landArea * 0.623 * landCoeff);
+            const totalMonthly = monthlyRainfall.map((inches, i) => 
+                buildingMonthly[i] + roadMonthly[i] + landMonthly[i]
+            );
             
             // Display results
-            displayResults(locationName, area, efficiency, monthlyRainfall, monthlyCollection, totalRainfall, totalCollection);
-        });
+            displayResults(
+                locationName, 
+                totalRainfall, 
+                {
+                    buildingArea,
+                    buildingCoeff: buildingCoeff * 100,
+                    buildingGallons,
+                    roadArea,
+                    roadCoeff: roadCoeff * 100,
+                    roadGallons,
+                    landArea,
+                    landCoeff: landCoeff * 100,
+                    landGallons,
+                    totalArea,
+                    totalCoeff: weightedCoeff * 100,
+                    totalGallons
+                },
+                monthlyRainfall,
+                totalMonthly
+            );
+        }
 
-        function displayResults(location, area, efficiency, monthlyRainfall, monthlyCollection, totalRainfall, totalCollection) {
+        function displayResults(location, totalRainfall, areas, monthlyRainfall, monthlyCollection) {
             // Show results container and hide the placeholder
             document.getElementById('no-results').classList.add('hidden');
             document.getElementById('results-container').classList.remove('hidden');
             
-            // Update summary information
+            // Update location and rainfall info
             document.getElementById('result-location').textContent = location;
-            document.getElementById('result-area').textContent = area.toLocaleString();
-            document.getElementById('result-efficiency').textContent = (efficiency * 100).toFixed(0);
             document.getElementById('result-annual-rainfall').textContent = `${totalRainfall.toFixed(1)} inches`;
-            document.getElementById('result-annual-collection').textContent = `${Math.round(totalCollection).toLocaleString()} gallons`;
+            
+            // Show/hide category result sections based on if they have area
+            document.getElementById('building-results').classList.toggle('hidden', areas.buildingArea <= 0);
+            document.getElementById('road-results').classList.toggle('hidden', areas.roadArea <= 0);
+            document.getElementById('land-results').classList.toggle('hidden', areas.landArea <= 0);
+            
+            // Update building results
+            if (areas.buildingArea > 0) {
+                document.getElementById('result-building-area').textContent = `${Math.round(areas.buildingArea).toLocaleString()} sq ft`;
+                document.getElementById('result-building-coefficient').textContent = `${Math.round(areas.buildingCoeff)}%`;
+                document.getElementById('result-building-gallons').textContent = `${Math.round(areas.buildingGallons).toLocaleString()} gallons`;
+                document.getElementById('result-building-monthly').textContent = `${Math.round(areas.buildingGallons / 12).toLocaleString()} gallons`;
+            }
+            
+            // Update road results
+            if (areas.roadArea > 0) {
+                document.getElementById('result-road-area').textContent = `${Math.round(areas.roadArea).toLocaleString()} sq ft`;
+                document.getElementById('result-road-coefficient').textContent = `${Math.round(areas.roadCoeff)}%`;
+                document.getElementById('result-road-gallons').textContent = `${Math.round(areas.roadGallons).toLocaleString()} gallons`;
+                document.getElementById('result-road-monthly').textContent = `${Math.round(areas.roadGallons / 12).toLocaleString()} gallons`;
+            }
+            
+            // Update land results
+            if (areas.landArea > 0) {
+                document.getElementById('result-land-area').textContent = `${Math.round(areas.landArea).toLocaleString()} sq ft`;
+                document.getElementById('result-land-coefficient').textContent = `${Math.round(areas.landCoeff)}%`;
+                document.getElementById('result-land-gallons').textContent = `${Math.round(areas.landGallons).toLocaleString()} gallons`;
+                document.getElementById('result-land-monthly').textContent = `${Math.round(areas.landGallons / 12).toLocaleString()} gallons`;
+            }
+            
+            // Update total results
+            document.getElementById('result-total-area').textContent = `${Math.round(areas.totalArea).toLocaleString()} sq ft`;
+            document.getElementById('result-total-coefficient').textContent = `${Math.round(areas.totalCoeff)}%`;
+            document.getElementById('result-total-gallons').textContent = `${Math.round(areas.totalGallons).toLocaleString()} gallons`;
+            document.getElementById('result-total-monthly').textContent = `${Math.round(areas.totalGallons / 12).toLocaleString()} gallons`;
             
             // Generate table rows
             const tableBody = document.getElementById('results-table-body');
@@ -1313,10 +1752,6 @@
                 rainfallChart.destroy();
             }
             
-            // Adjust colors for dark mode
-            const isDarkMode = document.documentElement.classList.contains('dark');
-            const textColor = isDarkMode ? '#f3f4f6' : '#374151';
-            
             // Create new chart
             rainfallChart = new Chart(chartCanvas, {
                 type: 'bar',
@@ -1334,8 +1769,8 @@
                         {
                             label: 'Water Collected (gallons)',
                             data: collectionData,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(236, 30, 125, 0.5)',
+                            borderColor: 'rgba(236, 30, 125, 1)',
                             borderWidth: 1,
                             type: 'line',
                             yAxisID: 'y1'
@@ -1347,17 +1782,17 @@
                     plugins: {
                         legend: {
                             labels: {
-                                color: textColor
+                                color: '#ffffff'
                             }
                         }
                     },
                     scales: {
                         x: {
                             ticks: {
-                                color: textColor
+                                color: '#ffffff'
                             },
                             grid: {
-                                color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                color: 'rgba(255, 255, 255, 0.1)'
                             }
                         },
                         y: {
@@ -1367,13 +1802,13 @@
                             title: {
                                 display: true,
                                 text: 'Rainfall (inches)',
-                                color: textColor
+                                color: '#ffffff'
                             },
                             ticks: {
-                                color: textColor
+                                color: '#ffffff'
                             },
                             grid: {
-                                color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                color: 'rgba(255, 255, 255, 0.1)'
                             }
                         },
                         y1: {
@@ -1383,14 +1818,14 @@
                             title: {
                                 display: true,
                                 text: 'Water Collected (gallons)',
-                                color: textColor
+                                color: '#ffffff'
                             },
                             ticks: {
-                                color: textColor
+                                color: '#ffffff'
                             },
                             grid: {
                                 drawOnChartArea: false,
-                                color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                color: 'rgba(255, 255, 255, 0.1)'
                             }
                         }
                     }
@@ -1419,3 +1854,4 @@
     </script>
 </body>
 </html>
+
