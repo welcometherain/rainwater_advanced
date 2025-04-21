@@ -9,7 +9,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=drawing,geometry"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=drawing,geometry,places"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -61,10 +61,14 @@
         .map-search-container {
             position: absolute;
             top: 10px;
-            left: 10px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 10;
-            width: calc(100% - 20px);
-            max-width: 400px;
+            width: 90%;
+            max-width: 500px;
+        }
+        .pac-container {
+            z-index: 1051 !important;
         }
     </style>
 </head>
@@ -84,18 +88,20 @@
                 
                 <div class="grid md:grid-cols-3 gap-6">
                     <div class="md:col-span-2">
+                        <div class="mb-3">
+                            <label for="address-input" class="block text-sm font-medium mb-1">Search for an address:</label>
+                            <div class="flex">
+                                <input type="text" id="address-input" placeholder="Enter address, city, or zip code" 
+                                    class="flex-grow p-2 border rounded-l-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                                <button id="address-search-btn" class="bg-primary hover:bg-primaryDark text-white px-4 py-2 rounded-r-md">Search</button>
+                            </div>
+                        </div>
+                        
                         <div id="map-container" class="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 relative">
                             <!-- Search box will be positioned here -->
-                            <div class="map-search-container">
-                                <div class="flex w-full">
-                                    <input id="map-search-input" type="text" placeholder="Search for an address or location" 
-                                        class="flex-grow p-2 border rounded-l-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white shadow-sm">
-                                    <button id="map-search-button" class="p-2 bg-primary hover:bg-primaryDark text-white rounded-r-md flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </div>
+                            <div class="map-search-container hidden">
+                                <input id="map-search-input" type="text" placeholder="Search for an address or location" 
+                                    class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white shadow-sm">
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2 mt-3">
@@ -115,7 +121,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
-                                Toggle Search
+                                Toggle Map Search
                             </button>
                         </div>
                     </div>
@@ -140,6 +146,33 @@
                                 <input type="text" id="area-name" placeholder="e.g., Main Roof, Driveway" 
                                     class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
                             </div>
+                            <div class="mb-3">
+                                <label for="area-coefficient" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
+                                <select id="area-coefficient" class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
+                                    <option value="custom">Custom Value</option>
+                                    <optgroup label="Roof Materials">
+                                        <option value="95">Metal Roof (95%)</option>
+                                        <option value="90" selected>Metal Roof (90%)</option>
+                                        <option value="90">Asphalt Shingles (90%)</option>
+                                        <option value="85">Asphalt Shingles (85%)</option>
+                                        <option value="85">Concrete Tile (85%)</option>
+                                        <option value="80">Concrete Tile (80%)</option>
+                                        <option value="85">Tar & Gravel (85%)</option>
+                                        <option value="80">Tar & Gravel (80%)</option>
+                                    </optgroup>
+                                    <optgroup label="Other Surfaces">
+                                        <option value="95">Concrete Pavement (95%)</option>
+                                        <option value="85">Brick Pavement (85%)</option>
+                                        <option value="75">Gravel (75%)</option>
+                                        <option value="35">Lawns, Sandy Soil (35%)</option>
+                                        <option value="20">Lawns, Heavy Soil (20%)</option>
+                                    </optgroup>
+                                </select>
+                                <div id="custom-coefficient-container" class="hidden mt-2">
+                                    <input type="number" id="custom-coefficient" min="1" max="100" value="90" 
+                                        class="w-full p-2 border rounded-md text-base bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
+                                </div>
+                            </div>
                             <button id="save-area" class="w-full py-2 px-3 bg-primary hover:bg-primaryDark text-white font-medium rounded-md transition">
                                 Save Area
                             </button>
@@ -153,6 +186,10 @@
                             <div class="flex justify-between">
                                 <span class="font-medium">Total Area:</span>
                                 <span id="total-area-value" class="font-bold">0 sq ft</span>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="font-medium">Avg. Runoff Coefficient:</span>
+                                <span id="total-coefficient-value" class="font-bold">0%</span>
                             </div>
                             <button id="use-in-calculator" class="w-full mt-3 py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition">
                                 Use in Calculator
@@ -259,11 +296,11 @@
                         </div>
 
                         <div>
-                            <label for="efficiency" class="block text-sm font-medium mb-1">System Efficiency (%)</label>
+                            <label for="efficiency" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
                             <input type="number" id="efficiency" name="efficiency" value="85" min="1" max="100" 
                                 class="w-full p-3 border rounded-md text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-primary focus:border-primary">
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Typical rainwater systems capture 80-90% of rainfall due to losses from evaporation, splash, etc.
+                                Percentage of rainfall that will be collected from the surface. Typical values: Metal Roof (90-95%), Asphalt (85-90%), Concrete (80-85%), Tar & Gravel (80-85%)
                             </p>
                         </div>
 
@@ -281,7 +318,7 @@
                         <div class="mb-6">
                             <h3 class="text-lg font-medium">Location: <span id="result-location" class="font-normal"></span></h3>
                             <p class="mt-1">Collection Area: <span id="result-area"></span> sq ft</p>
-                            <p class="mt-1">System Efficiency: <span id="result-efficiency"></span>%</p>
+                            <p class="mt-1">Runoff Coefficient: <span id="result-efficiency"></span>%</p>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 mb-6">
@@ -353,7 +390,9 @@
         let selectedShape = null;
         let currentPolygon = null;
         let savedAreas = [];
-        let searchBox;
+        let polygonsOnMap = new Map(); // Map to store polygons with their IDs
+        let editMode = false;
+        let editingAreaId = null;
         
         // Initialize map 
         function initMap() {
@@ -370,6 +409,7 @@
                 fullscreenControl: true,
                 zoomControl: true,
                 tilt: 0, // Disable the 45-degree tilt
+                scrollwheel: true, // Enable mouse wheel zooming
                 styles: document.documentElement.classList.contains('dark') ? [
                     { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
                     { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
@@ -395,11 +435,12 @@
             
             // Add event listener for when polygon is completed
             google.maps.event.addListener(drawingManager, 'polygoncomplete', function(polygon) {
-                // Clear any existing polygons
-                if (currentPolygon) {
+                // If in edit mode, delete the old polygon first
+                if (editMode && currentPolygon) {
                     currentPolygon.setMap(null);
                 }
                 
+                // Set current polygon
                 currentPolygon = polygon;
                 selectedShape = polygon;
                 drawingManager.setDrawingMode(null);
@@ -413,6 +454,26 @@
                 document.getElementById('area-save-form').classList.remove('hidden');
                 document.getElementById('no-areas').classList.add('hidden');
                 
+                // Pre-fill name field if in edit mode
+                if (editMode) {
+                    const area = savedAreas.find(a => a.id === editingAreaId);
+                    if (area) {
+                        document.getElementById('area-name').value = area.name;
+                        // Set the coefficient dropdown
+                        const coefficientSelect = document.getElementById('area-coefficient');
+                        const options = Array.from(coefficientSelect.options);
+                        const matchingOption = options.find(option => parseInt(option.value) === area.coefficient);
+                        
+                        if (matchingOption) {
+                            coefficientSelect.value = matchingOption.value;
+                        } else {
+                            coefficientSelect.value = 'custom';
+                            document.getElementById('custom-coefficient').value = area.coefficient;
+                            document.getElementById('custom-coefficient-container').classList.remove('hidden');
+                        }
+                    }
+                }
+                
                 // Add listeners for when the polygon is modified
                 google.maps.event.addListener(polygon.getPath(), 'set_at', updateArea);
                 google.maps.event.addListener(polygon.getPath(), 'insert_at', updateArea);
@@ -424,50 +485,78 @@
                 }
             });
             
-            // Set up search functionality with Google's Autocomplete
-            const searchInput = document.getElementById('map-search-input');
-            const searchButton = document.getElementById('map-search-button');
+            // Set up address search
+            const addressInput = document.getElementById('address-input');
+            const addressSearchBtn = document.getElementById('address-search-btn');
             
-            // Create autocomplete
-            const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+            // Create autocomplete for address input
+            const addressAutocomplete = new google.maps.places.Autocomplete(addressInput, {
                 types: ['geocode']
             });
             
-            autocomplete.bindTo('bounds', map);
+            // Handle address search
+            addressSearchBtn.addEventListener('click', searchAddress);
+            addressInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchAddress();
+                }
+            });
             
-            // Add listener for place changes
-            autocomplete.addListener('place_changed', function() {
-                const place = autocomplete.getPlace();
-                
+            // Handle place selection from autocomplete
+            addressAutocomplete.addListener('place_changed', function() {
+                const place = addressAutocomplete.getPlace();
                 if (!place.geometry || !place.geometry.location) {
-                    // User entered a place that was not suggested and pressed Enter
-                    alert("No details available for: " + place.name);
+                    alert('No details available for the entered address');
                     return;
                 }
                 
-                // If the place has a geometry, then present it on a map.
+                centerOnPlace(place);
+            });
+            
+            // Set up map search box
+            const mapSearchInput = document.getElementById('map-search-input');
+            
+            // Create map search autocomplete
+            const mapSearchAutocomplete = new google.maps.places.Autocomplete(mapSearchInput);
+            mapSearchAutocomplete.bindTo('bounds', map);
+            
+            // Listen for place selection in map search
+            mapSearchAutocomplete.addListener('place_changed', function() {
+                const place = mapSearchAutocomplete.getPlace();
+                
+                if (!place.geometry || !place.geometry.location) {
+                    alert('No details available for the entered place');
+                    return;
+                }
+                
+                centerOnPlace(place);
+            });
+            
+            // Helper function to center on a place
+            function centerOnPlace(place) {
+                // If the place has a geometry, then present it on a map
                 if (place.geometry.viewport) {
                     map.fitBounds(place.geometry.viewport);
                 } else {
                     map.setCenter(place.geometry.location);
-                    map.setZoom(17);
+                    map.setZoom(18); // Close zoom for buildings
                 }
-            });
+            }
             
-            // Add search button click handler
-            searchButton.addEventListener('click', function() {
-                if (searchInput.value.trim() === '') return;
+            function searchAddress() {
+                const address = addressInput.value.trim();
+                if (!address) return;
                 
                 const geocoder = new google.maps.Geocoder();
-                geocoder.geocode({ address: searchInput.value }, function(results, status) {
+                geocoder.geocode({ address: address }, function(results, status) {
                     if (status === 'OK') {
                         map.setCenter(results[0].geometry.location);
-                        map.setZoom(17);
+                        map.setZoom(18);
                     } else {
-                        alert('Location search was not successful for the following reason: ' + status);
+                        alert('Could not find the address: ' + status);
                     }
                 });
-            });
+            }
             
             // Try to get user's location
             if (navigator.geolocation) {
@@ -485,8 +574,22 @@
             }
         }
         
+        // Handle material/coefficient selection
+        document.getElementById('area-coefficient').addEventListener('change', function() {
+            const customContainer = document.getElementById('custom-coefficient-container');
+            if (this.value === 'custom') {
+                customContainer.classList.remove('hidden');
+            } else {
+                customContainer.classList.add('hidden');
+            }
+        });
+        
         // Handle map action buttons
         document.getElementById('draw-polygon').addEventListener('click', function() {
+            // Exit edit mode if active
+            editMode = false;
+            editingAreaId = null;
+            
             clearCurrentDrawing();
             drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
         });
@@ -508,6 +611,7 @@
             if (savedAreas.length === 0) {
                 document.getElementById('no-areas').classList.remove('hidden');
             }
+            document.getElementById('area-name').value = '';
             drawingManager.setDrawingMode(null);
         }
         
@@ -525,6 +629,20 @@
                 return;
             }
             
+            // Get the coefficient value
+            let coefficient;
+            const coefficientSelect = document.getElementById('area-coefficient');
+            if (coefficientSelect.value === 'custom') {
+                coefficient = parseInt(document.getElementById('custom-coefficient').value);
+                if (isNaN(coefficient) || coefficient < 1 || coefficient > 100) {
+                    alert('Please enter a valid runoff coefficient between 1 and 100.');
+                    return;
+                }
+            } else {
+                coefficient = parseInt(coefficientSelect.value);
+            }
+            
+            // Calculate area
             const area = google.maps.geometry.spherical.computeArea(currentPolygon.getPath());
             const areaInSquareFeet = area * 10.7639;
             
@@ -535,17 +653,47 @@
                 pathArray.push({ lat: point.lat(), lng: point.lng() });
             }
             
-            // Create saved area object
-            const savedArea = {
-                id: Date.now().toString(),
-                name: areaName,
-                area: areaInSquareFeet,
-                pathCoordinates: pathArray,
-                selected: false
-            };
-            
-            // Add to saved areas array
-            savedAreas.push(savedArea);
+            if (editMode && editingAreaId) {
+                // Update existing area
+                const areaIndex = savedAreas.findIndex(a => a.id === editingAreaId);
+                if (areaIndex !== -1) {
+                    // Update the area info
+                    savedAreas[areaIndex].name = areaName;
+                    savedAreas[areaIndex].area = areaInSquareFeet;
+                    savedAreas[areaIndex].pathCoordinates = pathArray;
+                    savedAreas[areaIndex].coefficient = coefficient;
+                    
+                    // Update the polygon on the map
+                    if (polygonsOnMap.has(editingAreaId)) {
+                        polygonsOnMap.get(editingAreaId).setMap(null);
+                    }
+                    
+                    createPolygonOnMap(editingAreaId, pathArray, savedAreas[areaIndex].selected);
+                }
+                
+                // Reset edit mode
+                editMode = false;
+                editingAreaId = null;
+            } else {
+                // Create new saved area
+                const newId = Date.now().toString();
+                
+                // Create saved area object
+                const savedArea = {
+                    id: newId,
+                    name: areaName,
+                    area: areaInSquareFeet,
+                    pathCoordinates: pathArray,
+                    coefficient: coefficient,
+                    selected: false
+                };
+                
+                // Add to saved areas array
+                savedAreas.push(savedArea);
+                
+                // Add the polygon to the map
+                createPolygonOnMap(newId, pathArray, false);
+            }
             
             // Update UI
             renderSavedAreasList();
@@ -555,11 +703,40 @@
             currentPolygon.setMap(null);
             currentPolygon = null;
             document.getElementById('area-name').value = '';
+            document.getElementById('area-coefficient').value = '90'; // Reset to default
+            document.getElementById('custom-coefficient-container').classList.add('hidden');
             document.getElementById('area-save-form').classList.add('hidden');
             
             // Show the saved areas
             document.getElementById('total-area').classList.remove('hidden');
         });
+        
+        // Helper function to create a polygon on the map
+        function createPolygonOnMap(id, pathCoordinates, isSelected) {
+            const polygon = new google.maps.Polygon({
+                paths: pathCoordinates,
+                strokeColor: isSelected ? '#00FF00' : '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: isSelected ? '#00FF00' : '#FF0000',
+                fillOpacity: 0.35,
+                editable: false,
+                map: map
+            });
+            
+            // Store the polygon with its ID
+            polygonsOnMap.set(id, polygon);
+            
+            // Add click event to select this polygon
+            google.maps.event.addListener(polygon, 'click', function() {
+                const area = savedAreas.find(a => a.id === id);
+                if (area) {
+                    showAreaOnMap(id);
+                }
+            });
+            
+            return polygon;
+        }
         
         // Render the list of saved areas
         function renderSavedAreasList() {
@@ -574,15 +751,22 @@
                 listItem.innerHTML = `
                     <div>
                         <div class="font-medium">${area.name}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">${Math.round(area.area).toLocaleString()} sq ft</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            ${Math.round(area.area).toLocaleString()} sq ft · ${area.coefficient}% runoff
+                        </div>
                     </div>
                     <div class="flex gap-2">
-                        <button class="select-btn p-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                        <button class="select-btn p-1 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" title="Select/Deselect">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                         </button>
-                        <button class="delete-btn p-1 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-500">
+                        <button class="edit-btn p-1 text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-500" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                        </button>
+                        <button class="delete-btn p-1 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-500" title="Delete">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                             </svg>
@@ -593,12 +777,20 @@
                 listElement.appendChild(listItem);
             });
             
-            // Add event listeners for selection and deletion
+            // Add event listeners for select, edit, and delete
             document.querySelectorAll('.select-btn').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const id = this.closest('.area-list-item').dataset.id;
                     toggleAreaSelection(id);
+                });
+            });
+            
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = this.closest('.area-list-item').dataset.id;
+                    editArea(id);
                 });
             });
             
@@ -610,7 +802,7 @@
                 });
             });
             
-            // Handle item click for selection
+            // Handle item click for showing on map
             document.querySelectorAll('.area-list-item').forEach(item => {
                 item.addEventListener('click', function() {
                     const id = this.dataset.id;
@@ -619,11 +811,83 @@
             });
         }
         
+        // Edit area
+        function editArea(id) {
+            // Find the area to edit
+            const area = savedAreas.find(a => a.id === id);
+            if (!area) return;
+            
+            // Set edit mode
+            editMode = true;
+            editingAreaId = id;
+            
+            // Create editable polygon from saved coordinates
+            if (currentPolygon) {
+                currentPolygon.setMap(null);
+            }
+            
+            currentPolygon = new google.maps.Polygon({
+                paths: area.pathCoordinates,
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                editable: true,
+                map: map
+            });
+            
+            // Add listeners for when the polygon is modified
+            google.maps.event.addListener(currentPolygon.getPath(), 'set_at', updateArea);
+            google.maps.event.addListener(currentPolygon.getPath(), 'insert_at', updateArea);
+            
+            function updateArea() {
+                const updatedArea = google.maps.geometry.spherical.computeArea(currentPolygon.getPath());
+                const updatedAreaInSquareFeet = updatedArea * 10.7639;
+                document.getElementById('measured-area').textContent = Math.round(updatedAreaInSquareFeet).toLocaleString() + ' sq ft';
+            }
+            
+            // Show form with pre-filled values
+            document.getElementById('area-name').value = area.name;
+            document.getElementById('measured-area').textContent = Math.round(area.area).toLocaleString() + ' sq ft';
+            
+            // Set the appropriate coefficient
+            const coefficientSelect = document.getElementById('area-coefficient');
+            const options = Array.from(coefficientSelect.options);
+            const matchingOption = options.find(option => parseInt(option.value) === area.coefficient);
+            
+            if (matchingOption) {
+                coefficientSelect.value = matchingOption.value;
+                document.getElementById('custom-coefficient-container').classList.add('hidden');
+            } else {
+                coefficientSelect.value = 'custom';
+                document.getElementById('custom-coefficient').value = area.coefficient;
+                document.getElementById('custom-coefficient-container').classList.remove('hidden');
+            }
+            
+            document.getElementById('area-save-form').classList.remove('hidden');
+            
+            // Center map on the polygon
+            const bounds = new google.maps.LatLngBounds();
+            area.pathCoordinates.forEach(point => bounds.extend(point));
+            map.fitBounds(bounds);
+        }
+        
         // Toggle area selection
         function toggleAreaSelection(id) {
             const area = savedAreas.find(a => a.id === id);
             if (area) {
                 area.selected = !area.selected;
+                
+                // Update the polygon color on the map
+                if (polygonsOnMap.has(id)) {
+                    const polygon = polygonsOnMap.get(id);
+                    polygon.setOptions({
+                        strokeColor: area.selected ? '#00FF00' : '#FF0000',
+                        fillColor: area.selected ? '#00FF00' : '#FF0000'
+                    });
+                }
+                
                 renderSavedAreasList();
                 updateTotalArea();
             }
@@ -631,6 +895,12 @@
         
         // Delete an area
         function deleteArea(id) {
+            // Remove the polygon from the map
+            if (polygonsOnMap.has(id)) {
+                polygonsOnMap.get(id).setMap(null);
+                polygonsOnMap.delete(id);
+            }
+            
             savedAreas = savedAreas.filter(a => a.id !== id);
             renderSavedAreasList();
             updateTotalArea();
@@ -643,28 +913,9 @@
         
         // Show area on map
         function showAreaOnMap(id) {
-            // Clear current drawing if any
-            if (currentPolygon) {
-                currentPolygon.setMap(null);
-                currentPolygon = null;
-            }
-            
             const area = savedAreas.find(a => a.id === id);
             
             if (area) {
-                // Create polygon from saved coordinates
-                currentPolygon = new google.maps.Polygon({
-                    paths: area.pathCoordinates,
-                    strokeColor: '#FF0000',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: '#FF0000',
-                    fillOpacity: 0.35,
-                    editable: false
-                });
-                
-                currentPolygon.setMap(map);
-                
                 // Center map on polygon
                 const bounds = new google.maps.LatLngBounds();
                 area.pathCoordinates.forEach(point => bounds.extend(point));
@@ -677,7 +928,14 @@
             const selectedAreas = savedAreas.filter(a => a.selected);
             const totalAreaValue = selectedAreas.reduce((sum, area) => sum + area.area, 0);
             
+            // Calculate weighted average coefficient
+            let weightedCoefficient = 0;
+            if (totalAreaValue > 0) {
+                weightedCoefficient = selectedAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / totalAreaValue;
+            }
+            
             document.getElementById('total-area-value').textContent = Math.round(totalAreaValue).toLocaleString() + ' sq ft';
+            document.getElementById('total-coefficient-value').textContent = Math.round(weightedCoefficient) + '%';
             document.getElementById('total-area').classList.toggle('hidden', savedAreas.length === 0);
         }
         
@@ -690,7 +948,15 @@
             }
             
             const totalAreaValue = selectedAreas.reduce((sum, area) => sum + area.area, 0);
+            
+            // Calculate weighted average coefficient
+            let weightedCoefficient = 0;
+            if (totalAreaValue > 0) {
+                weightedCoefficient = selectedAreas.reduce((sum, area) => sum + (area.area * area.coefficient), 0) / totalAreaValue;
+            }
+            
             document.getElementById('area').value = Math.round(totalAreaValue);
+            document.getElementById('efficiency').value = Math.round(weightedCoefficient);
             
             // Scroll to calculator form
             document.getElementById('calculator-form').scrollIntoView({ behavior: 'smooth' });
@@ -951,7 +1217,7 @@
             const efficiency = parseFloat(document.getElementById('efficiency').value) / 100;
             
             if (isNaN(area) || area <= 0 || isNaN(efficiency) || efficiency <= 0) {
-                alert('Please enter a valid collection area and efficiency.');
+                alert('Please enter a valid collection area and runoff coefficient.');
                 return;
             }
             
@@ -1134,10 +1400,10 @@
 
         // Initialize the map when the page loads
         window.addEventListener('load', function() {
-            // Load the Places library for Autocomplete
             if (typeof google !== 'undefined' && google.maps) {
+                // Check if Places library is loaded
                 if (typeof google.maps.places === 'undefined') {
-                    // If Places library isn't loaded, dynamically load it
+                    // Load Places library if needed
                     const script = document.createElement('script');
                     script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=places,drawing,geometry&callback=initMap`;
                     script.async = true;
