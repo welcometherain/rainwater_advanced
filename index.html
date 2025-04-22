@@ -111,6 +111,64 @@
             border-bottom-color: #EC1E7D;
             background-color: rgba(255, 255, 255, 0.15);
         }
+        /* Help tooltip styling */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 300px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .result-card {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
+        .result-card.building {
+            border-left: 4px solid #EC1E7D;
+        }
+        .result-card.road {
+            border-left: 4px solid #F57C00;
+        }
+        .result-card.land {
+            border-left: 4px solid #43A047;
+        }
+        .no-data-message {
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+            text-align: center;
+            padding: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -199,7 +257,21 @@
                             
                             <!-- Building coefficients (default) -->
                             <div id="building-coefficients" class="mb-3">
-                                <label for="building-coefficient" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="building-coefficient" class="block text-sm font-medium">Runoff Coefficient (%)</label>
+                                    <div class="tooltip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span class="tooltiptext">
+                                            <strong>How to choose a value:</strong><br>
+                                            - Choose higher values (90-95%) for new, steep metal roofs<br>
+                                            - Choose middle values (85-90%) for asphalt shingles in good condition<br>
+                                            - Choose lower values (80-85%) for flat or aged roof surfaces<br>
+                                            - Consider roof age, slope, and material condition
+                                        </span>
+                                    </div>
+                                </div>
                                 <select id="building-coefficient" class="coefficient-select w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
                                     <option value="custom">Custom Value</option>
                                     <option value="95">Metal Roof (95%)</option>
@@ -215,7 +287,21 @@
                             
                             <!-- Road coefficients (hidden by default) -->
                             <div id="road-coefficients" class="mb-3 hidden">
-                                <label for="road-coefficient" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="road-coefficient" class="block text-sm font-medium">Runoff Coefficient (%)</label>
+                                    <div class="tooltip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span class="tooltiptext">
+                                            <strong>How to choose a value:</strong><br>
+                                            - Choose higher values (85-95%) for smooth, sealed pavement with steep slopes<br>
+                                            - Choose middle values (75-85%) for standard asphalt or concrete<br>
+                                            - Choose lower values (70-75%) for aged, cracked or porous pavement<br>
+                                            - For gravel, higher values (50-60%) for compacted sites, lower (40-50%) for loose material
+                                        </span>
+                                    </div>
+                                </div>
                                 <select id="road-coefficient" class="coefficient-select w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
                                     <option value="custom">Custom Value</option>
                                     <option value="95">Asphalt/Concrete (95%)</option>
@@ -236,7 +322,21 @@
                             
                             <!-- Land coefficients (hidden by default) -->
                             <div id="land-coefficients" class="mb-3 hidden">
-                                <label for="land-coefficient" class="block text-sm font-medium mb-1">Runoff Coefficient (%)</label>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="land-coefficient" class="block text-sm font-medium">Runoff Coefficient (%)</label>
+                                    <div class="tooltip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span class="tooltiptext">
+                                            <strong>How to choose a value:</strong><br>
+                                            - For bare soil, choose higher values for steep slopes, compacted soil, or after heavy rain<br>
+                                            - For vegetated areas, choose higher values for steep slopes, sparse vegetation, or saturated soil<br>
+                                            - For lawns, higher values for heavy soils (clay), lower for sandy soils<br>
+                                            - Consider steepness of slope, soil type, vegetation density, and soil compaction
+                                        </span>
+                                    </div>
+                                </div>
                                 <select id="land-coefficient" class="coefficient-select w-full p-2 border rounded-md text-base bg-gray-700 border-gray-600 text-white">
                                     <option value="custom">Custom Value</option>
                                     <optgroup label="Healthy Lawn">
@@ -298,6 +398,7 @@
                             <h4 class="font-medium text-sm uppercase text-permTan mb-2">Buildings</h4>
                             <ul id="building-areas-list" class="divide-y divide-gray-600 max-h-32 overflow-y-auto">
                                 <!-- Building areas will be displayed here -->
+                                <li class="no-data-message text-xs italic">No building areas added yet</li>
                             </ul>
                             <div id="building-total" class="mt-2 pt-2 border-t border-gray-600 hidden">
                                 <div class="flex justify-between text-sm">
@@ -316,6 +417,7 @@
                             <h4 class="font-medium text-sm uppercase text-permTan mb-2">Roads/Paved Areas</h4>
                             <ul id="road-areas-list" class="divide-y divide-gray-600 max-h-32 overflow-y-auto">
                                 <!-- Road areas will be displayed here -->
+                                <li class="no-data-message text-xs italic">No paved areas added yet</li>
                             </ul>
                             <div id="road-total" class="mt-2 pt-2 border-t border-gray-600 hidden">
                                 <div class="flex justify-between text-sm">
@@ -334,6 +436,7 @@
                             <h4 class="font-medium text-sm uppercase text-permTan mb-2">Land/Soil</h4>
                             <ul id="land-areas-list" class="divide-y divide-gray-600 max-h-32 overflow-y-auto">
                                 <!-- Land areas will be displayed here -->
+                                <li class="no-data-message text-xs italic">No land areas added yet</li>
                             </ul>
                             <div id="land-total" class="mt-2 pt-2 border-t border-gray-600 hidden">
                                 <div class="flex justify-between text-sm">
@@ -458,13 +561,23 @@
                     <h2 class="text-xl font-semibold mb-4">Rainwater Harvesting Potential</h2>
                     
                     <div id="results-container" class="hidden">
-                        <div class="mb-6">
+                        <div class="mb-4">
                             <h3 class="text-lg font-medium">Location: <span id="result-location" class="font-normal"></span></h3>
                             <p class="mt-1">Annual Rainfall: <span id="result-annual-rainfall"></span></p>
                         </div>
 
+                        <!-- Summary Cards by Area -->
+                        <div id="individual-areas" class="space-y-4 mb-6">
+                            <h3 class="text-lg font-medium mb-2">Individual Area Results</h3>
+                            <div id="individual-area-list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                                <!-- Individual area results will be displayed here -->
+                            </div>
+                        </div>
+
                         <!-- Results by category -->
                         <div class="space-y-4 mb-6">
+                            <h3 class="text-lg font-medium mb-2">Category Totals</h3>
+
                             <!-- Building results -->
                             <div id="building-results" class="border border-gray-600 rounded-lg p-4 hidden">
                                 <h3 class="text-lg font-medium mb-2">Buildings</h3>
@@ -617,7 +730,7 @@
             // Default location (United States)
             const defaultLocation = { lat: 39.8283, lng: -98.5795 };
             
-            // Create map with tilt disabled
+            // Create map with tilt disabled and higher max zoom
             map = new google.maps.Map(document.getElementById('map-container'), {
                 center: defaultLocation,
                 zoom: 5,
@@ -628,6 +741,7 @@
                 zoomControl: true,
                 tilt: 0, // Disable the 45-degree tilt
                 scrollwheel: true, // Enable mouse wheel zooming
+                maxZoom: 22, // Increased maximum zoom level (default is 20)
                 styles: [
                     { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
                     { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
@@ -640,10 +754,10 @@
                 drawingMode: null,
                 drawingControl: false,
                 polygonOptions: {
-                    strokeColor: '#FF0000',
+                    strokeColor: getColorForCategory(currentCategory, true),
                     strokeOpacity: 0.8,
                     strokeWeight: 2,
-                    fillColor: '#FF0000',
+                    fillColor: getColorForCategory(currentCategory, true),
                     fillOpacity: 0.35,
                     editable: true
                 }
@@ -755,9 +869,13 @@
                 // If the place has a geometry, then present it on a map
                 if (place.geometry.viewport) {
                     map.fitBounds(place.geometry.viewport);
+                    // After fitting to viewport, zoom in a bit more if needed
+                    setTimeout(() => {
+                        if (map.getZoom() < 18) map.setZoom(18);
+                    }, 300);
                 } else {
                     map.setCenter(place.geometry.location);
-                    map.setZoom(18); // Close zoom for buildings
+                    map.setZoom(20); // Close zoom for buildings
                 }
             }
             
@@ -769,7 +887,7 @@
                 geocoder.geocode({ address: address }, function(results, status) {
                     if (status === 'OK') {
                         map.setCenter(results[0].geometry.location);
-                        map.setZoom(18);
+                        map.setZoom(20); // Zoom in more closely
                     } else {
                         alert('Could not find the address: ' + status);
                     }
@@ -784,12 +902,36 @@
                         lng: position.coords.longitude
                     };
                     map.setCenter(userLocation);
-                    map.setZoom(18); // Zoom in to a level where buildings are visible
+                    map.setZoom(20); // Zoom in to a level where buildings are visible
                 }, function() {
                     // Location access denied or error
                     console.log('Unable to get current location.');
                 });
             }
+        }
+
+        // Helper function to get color based on category and selection state
+        function getColorForCategory(category, isSelected) {
+            // Selected colors by category
+            if (isSelected) {
+                if (category === 'buildings') {
+                    return '#EC1E7D'; // magenta
+                } else if (category === 'roads') {
+                    return '#F57C00'; // orange
+                } else if (category === 'land') {
+                    return '#43A047'; // green
+                }
+            } else {
+                // Unselected colors by category
+                if (category === 'buildings') {
+                    return '#880E4F'; // dark magenta
+                } else if (category === 'roads') {
+                    return '#A04000'; // dark orange
+                } else if (category === 'land') {
+                    return '#1B5E20'; // dark green
+                }
+            }
+            return '#FF0000'; // default red
         }
         
         // Handle category tabs
@@ -820,6 +962,20 @@
             
             // Update current category
             currentCategory = category;
+            
+            // Update drawing manager with new colors for this category
+            if (drawingManager) {
+                drawingManager.setOptions({
+                    polygonOptions: {
+                        strokeColor: getColorForCategory(category, true),
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        fillColor: getColorForCategory(category, true),
+                        fillOpacity: 0.35,
+                        editable: true
+                    }
+                });
+            }
         }
         
         // Handle coefficient select change for all coefficient dropdowns
@@ -964,34 +1120,9 @@
         
         // Helper function to create a polygon on the map
         function createPolygonOnMap(id, pathCoordinates, isSelected, category) {
-            // Set polygon color based on category
-            let fillColor, strokeColor;
-            
-            if (isSelected) {
-                // Selected colors by category
-                if (category === 'buildings') {
-                    fillColor = '#EC1E7D';
-                    strokeColor = '#EC1E7D';
-                } else if (category === 'roads') {
-                    fillColor = '#F57C00';
-                    strokeColor = '#F57C00';
-                } else if (category === 'land') {
-                    fillColor = '#43A047';
-                    strokeColor = '#43A047';
-                }
-            } else {
-                // Unselected colors by category
-                if (category === 'buildings') {
-                    fillColor = '#880E4F';
-                    strokeColor = '#880E4F';
-                } else if (category === 'roads') {
-                    fillColor = '#A04000';
-                    strokeColor = '#A04000';
-                } else if (category === 'land') {
-                    fillColor = '#1B5E20';
-                    strokeColor = '#1B5E20';
-                }
-            }
+            // Get color based on category and selection state
+            const fillColor = getColorForCategory(category, isSelected);
+            const strokeColor = getColorForCategory(category, isSelected);
             
             const polygon = new google.maps.Polygon({
                 paths: pathCoordinates,
@@ -1036,13 +1167,28 @@
             const landAreas = savedAreas.filter(a => a.category === 'land');
             
             // Render building areas
-            renderAreaList(buildingAreas, 'building-areas-list');
+            if (buildingAreas.length > 0) {
+                renderAreaList(buildingAreas, 'building-areas-list');
+            } else {
+                document.getElementById('building-areas-list').innerHTML = 
+                    '<li class="no-data-message text-xs italic">No building areas added yet</li>';
+            }
             
             // Render road areas
-            renderAreaList(roadAreas, 'road-areas-list');
+            if (roadAreas.length > 0) {
+                renderAreaList(roadAreas, 'road-areas-list');
+            } else {
+                document.getElementById('road-areas-list').innerHTML = 
+                    '<li class="no-data-message text-xs italic">No paved areas added yet</li>';
+            }
             
             // Render land areas
-            renderAreaList(landAreas, 'land-areas-list');
+            if (landAreas.length > 0) {
+                renderAreaList(landAreas, 'land-areas-list');
+            } else {
+                document.getElementById('land-areas-list').innerHTML = 
+                    '<li class="no-data-message text-xs italic">No land areas added yet</li>';
+            }
             
             // Update visibility of sections based on whether they have areas
             document.getElementById('building-total').classList.toggle('hidden', buildingAreas.length === 0);
@@ -1056,6 +1202,7 @@
         // Helper function to render a list of areas
         function renderAreaList(areas, listId) {
             const listElement = document.getElementById(listId);
+            listElement.innerHTML = ''; // Clear existing content
             
             areas.forEach(area => {
                 const listItem = document.createElement('li');
@@ -1142,10 +1289,10 @@
             
             currentPolygon = new google.maps.Polygon({
                 paths: area.pathCoordinates,
-                strokeColor: '#FF0000',
+                strokeColor: getColorForCategory(area.category, true),
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
-                fillColor: '#FF0000',
+                fillColor: getColorForCategory(area.category, true),
                 fillOpacity: 0.35,
                 editable: true,
                 map: map
@@ -1197,33 +1344,8 @@
                 if (polygonsOnMap.has(id)) {
                     // Get selected state and category for color
                     const polygon = polygonsOnMap.get(id);
-                    let fillColor, strokeColor;
-                    
-                    if (area.selected) {
-                        // Selected colors by category
-                        if (area.category === 'buildings') {
-                            fillColor = '#EC1E7D';
-                            strokeColor = '#EC1E7D';
-                        } else if (area.category === 'roads') {
-                            fillColor = '#F57C00';
-                            strokeColor = '#F57C00';
-                        } else if (area.category === 'land') {
-                            fillColor = '#43A047';
-                            strokeColor = '#43A047';
-                        }
-                    } else {
-                        // Unselected colors by category
-                        if (area.category === 'buildings') {
-                            fillColor = '#880E4F';
-                            strokeColor = '#880E4F';
-                        } else if (area.category === 'roads') {
-                            fillColor = '#A04000';
-                            strokeColor = '#A04000';
-                        } else if (area.category === 'land') {
-                            fillColor = '#1B5E20';
-                            strokeColor = '#1B5E20';
-                        }
-                    }
+                    const fillColor = getColorForCategory(area.category, area.selected);
+                    const strokeColor = getColorForCategory(area.category, area.selected);
                     
                     polygon.setOptions({
                         strokeColor: strokeColor,
@@ -1450,7 +1572,7 @@
                 geocoder.geocode({ address: zipcode }, function(results, status) {
                     if (status === 'OK') {
                         map.setCenter(results[0].geometry.location);
-                        map.setZoom(16);
+                        map.setZoom(20);
                     }
                 });
                 
@@ -1466,7 +1588,7 @@
                     
                     // Set map center
                     map.setCenter(location);
-                    map.setZoom(16);
+                    map.setZoom(20);
                     
                     // For this demo, we'll use a nearby city's data since we can't do a real API call
                     // In a real app, you would make an API call to a weather service here
@@ -1615,13 +1737,40 @@
                 return;
             }
             
+            // Calculate for selected areas
+            const selectedAreas = savedAreas.filter(a => a.selected);
+            if (selectedAreas.length === 0) {
+                alert('Please select at least one area from the saved areas list.');
+                return;
+            }
+            
             // Calculate totals for each category
             const totalRainfall = monthlyRainfall.reduce((sum, inches) => sum + inches, 0);
             
             // Group selected areas by category
-            const buildingAreas = savedAreas.filter(a => a.category === 'buildings' && a.selected);
-            const roadAreas = savedAreas.filter(a => a.category === 'roads' && a.selected);
-            const landAreas = savedAreas.filter(a => a.category === 'land' && a.selected);
+            const buildingAreas = selectedAreas.filter(a => a.category === 'buildings');
+            const roadAreas = selectedAreas.filter(a => a.category === 'roads');
+            const landAreas = selectedAreas.filter(a => a.category === 'land');
+            
+            // Individual area calculations
+            const individualResults = selectedAreas.map(area => {
+                const coefficient = area.coefficient / 100;
+                const gallons = totalRainfall * area.area * 0.623 * coefficient;
+                const monthlyGallons = monthlyRainfall.map(inches => 
+                    inches * area.area * 0.623 * coefficient
+                );
+                
+                return {
+                    id: area.id,
+                    name: area.name,
+                    category: area.category,
+                    area: area.area,
+                    coefficient: area.coefficient,
+                    gallons: gallons,
+                    monthlyAvg: gallons / 12,
+                    monthlyGallons: monthlyGallons
+                };
+            });
             
             // Building calculations
             const buildingArea = buildingAreas.reduce((sum, area) => sum + area.area, 0);
@@ -1651,7 +1800,7 @@
                 : 0;
             const totalGallons = buildingGallons + roadGallons + landGallons;
             
-            // Calculate monthly collections for chart
+            // Calculate monthly collections for chart and table
             const buildingMonthly = monthlyRainfall.map(inches => inches * buildingArea * 0.623 * buildingCoeff);
             const roadMonthly = monthlyRainfall.map(inches => inches * roadArea * 0.623 * roadCoeff);
             const landMonthly = monthlyRainfall.map(inches => inches * landArea * 0.623 * landCoeff);
@@ -1678,11 +1827,12 @@
                     totalGallons
                 },
                 monthlyRainfall,
-                totalMonthly
+                totalMonthly,
+                individualResults
             );
         }
 
-        function displayResults(location, totalRainfall, areas, monthlyRainfall, monthlyCollection) {
+        function displayResults(location, totalRainfall, areas, monthlyRainfall, monthlyCollection, individualResults) {
             // Show results container and hide the placeholder
             document.getElementById('no-results').classList.add('hidden');
             document.getElementById('results-container').classList.remove('hidden');
@@ -1725,6 +1875,43 @@
             document.getElementById('result-total-coefficient').textContent = `${Math.round(areas.totalCoeff)}%`;
             document.getElementById('result-total-gallons').textContent = `${Math.round(areas.totalGallons).toLocaleString()} gallons`;
             document.getElementById('result-total-monthly').textContent = `${Math.round(areas.totalGallons / 12).toLocaleString()} gallons`;
+            
+            // Display individual area results
+            const individualAreaList = document.getElementById('individual-area-list');
+            individualAreaList.innerHTML = '';
+            
+            individualResults.forEach(result => {
+                // Determine category for styling
+                let categoryClass = '';
+                if (result.category === 'buildings') categoryClass = 'building';
+                else if (result.category === 'roads') categoryClass = 'road';
+                else if (result.category === 'land') categoryClass = 'land';
+                
+                const areaCard = document.createElement('div');
+                areaCard.className = `result-card ${categoryClass} p-3`;
+                areaCard.innerHTML = `
+                    <h4 class="font-medium text-base">${result.name}</h4>
+                    <div class="grid grid-cols-2 gap-2 mt-2 text-sm">
+                        <div>
+                            <div class="text-gray-300">Area:</div>
+                            <div class="font-medium">${Math.round(result.area).toLocaleString()} sq ft</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-300">Runoff Coefficient:</div>
+                            <div class="font-medium">${result.coefficient}%</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-300">Annual Collection:</div>
+                            <div class="font-medium">${Math.round(result.gallons).toLocaleString()} gallons</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-300">Monthly Average:</div>
+                            <div class="font-medium">${Math.round(result.monthlyAvg).toLocaleString()} gallons</div>
+                        </div>
+                    </div>
+                `;
+                individualAreaList.appendChild(areaCard);
+            });
             
             // Generate table rows
             const tableBody = document.getElementById('results-table-body');
@@ -1854,4 +2041,3 @@
     </script>
 </body>
 </html>
-
